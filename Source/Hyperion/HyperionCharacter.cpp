@@ -54,7 +54,7 @@ void AHyperionCharacter::NotifyControllerChanged()
 }
 
 void AHyperionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{	
+{
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
