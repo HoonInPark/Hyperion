@@ -15,6 +15,7 @@ class HYPERIONBASE_API AUIHealthBar : public AActor
 public:
     AUIHealthBar();
 
+#if OBSERVER_WITH_DELEGATE
     // 체력 컴포넌트를 옵저버로 등록하는 메서드
     void SetHealthComponent(UHealthComponent* HealthComp)
     {
@@ -25,9 +26,11 @@ public:
     }
 
     // 체력 변화 시 UI를 업데이트하는 메서드
-    UFUNCTION()
+    //UFUNCTION()
     void UpdateHealthBar(float NewHealth)
     {
 		UE_LOG(LogTemp, Warning, TEXT("Health changed: %f"), NewHealth);
     }
+#else
+#endif
 };

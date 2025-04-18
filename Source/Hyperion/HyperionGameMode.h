@@ -3,15 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "HyperionBase/HealthComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "HyperionGameMode.generated.h"
+
 
 /*
 * 
 */
-
-class UHealthComponent;
-
 UCLASS(minimalapi)
 class AHyperionGameMode : public AGameModeBase
 {

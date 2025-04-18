@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "HealthComponent.generated.h"
 
+#define OBSERVER_WITH_DELEGATE 0
+
 /*
 * game mode changes the health data in every sec
 */
@@ -16,6 +18,8 @@ class HYPERIONBASE_API UHealthComponent : public UActorComponent
 
 public:
     UHealthComponent();
+
+#if OBSERVER_WITH_DELEGATE
 
     // 델리게이트 선언 (옵저버들이 구독할 이벤트)
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float, NewHealth);
@@ -31,4 +35,6 @@ public:
 
 private:
     float m_Health;
+#else
+#endif
 };
