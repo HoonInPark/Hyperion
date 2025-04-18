@@ -6,6 +6,10 @@
 #include "GameFramework/GameModeBase.h"
 #include "HyperionGameMode.generated.h"
 
+/*
+* 
+*/
+
 class UHealthComponent;
 
 UCLASS(minimalapi)
@@ -23,6 +27,3 @@ private:
 	float m_Timer{ 0.f };
 	UHealthComponent* m_pHealthComp{ nullptr };
 };
-
-
-

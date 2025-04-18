@@ -14,7 +14,7 @@ class HYPERIONBASE_API UHealthComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
     UHealthComponent();
 
     // 델리게이트 선언 (옵저버들이 구독할 이벤트)

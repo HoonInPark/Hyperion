@@ -5,6 +5,7 @@
 #include "HyperionBase/HealthComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "HyperionBase/UIHealthBar.h"
 
 AHyperionGameMode::AHyperionGameMode()
 	: Super()
@@ -22,13 +23,24 @@ void AHyperionGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	auto PlayerController = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PlayerController)
+	auto pPlayerController = UGameplayStatics::GetPlayerController(this, 0);
+	if (!pPlayerController)
+	{
 		UE_LOG(LogTemp, Error, TEXT("PlayerController is null!"));
+		return;
+	}
 
-	m_pHealthComp = PlayerController->GetPawn()->GetComponentByClass<UHealthComponent>();
+	m_pHealthComp = pPlayerController->GetPawn()->GetComponentByClass<UHealthComponent>();
 	if (!m_pHealthComp)
+	{
 		UE_LOG(LogTemp, Error, TEXT("HealthComponent is null!"));
+		return;
+	}
+
+	auto pWorld = GetWorld();
+	auto pHealthBar = pWorld->SpawnActor<AUIHealthBar>(AUIHealthBar::StaticClass(), FVector(), FRotator());
+
+	pHealthBar->SetHealthComponent(m_pHealthComp);
 }
 
 void AHyperionGameMode::Tick(float DeltaTime)
