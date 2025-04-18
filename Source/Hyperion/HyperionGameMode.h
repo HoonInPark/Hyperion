@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "HyperionGameMode.generated.h"
 
+class UHealthComponent;
+
 UCLASS(minimalapi)
 class AHyperionGameMode : public AGameModeBase
 {
@@ -13,6 +15,13 @@ class AHyperionGameMode : public AGameModeBase
 
 public:
 	AHyperionGameMode();
+
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+
+private:
+	float m_Timer{ 0.f };
+	UHealthComponent* m_pHealthComp{ nullptr };
 };
 
 

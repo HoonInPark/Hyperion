@@ -6,7 +6,9 @@
 #include "Components/ActorComponent.h"
 #include "HealthComponent.generated.h"
 
-
+/*
+* game mode changes the health data in every sec
+*/
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HYPERIONBASE_API UHealthComponent : public UActorComponent
 {
@@ -23,10 +25,10 @@ public:
 
     void ChangeHealth(float Delta)
     {
-        Health += Delta;
-        OnHealthChanged.Broadcast(Health);
+        m_Health += Delta;
+        OnHealthChanged.Broadcast(m_Health);
     }
 
 private:
-    float Health;
+    float m_Health;
 };
