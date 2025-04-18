@@ -3,6 +3,22 @@
 
 #include "GameStateSub.h"
 
+UGameStateSub::UGameStateSub()
+{
+}
 
+void UGameStateSub::RegisterObserver(TScriptInterface<IObserver> observer)
+{
+}
 
+void UGameStateSub::UnregisterObserver(TScriptInterface<IObserver> observer)
+{
+}
 
+void UGameStateSub::NotifyObservers()
+{
+}
+
+void UGameStateSub::IncreaseScore(int32 Amount)
+{
+}

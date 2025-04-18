@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "HealthComponent.h"
 #include "UIHealthBar.generated.h"
 
 UCLASS()
@@ -11,18 +12,21 @@ class HYPERIONBASE_API AUIHealthBar : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	AUIHealthBar();
+public:
+    AUIHealthBar();
+    // 체력 컴포넌트를 옵저버로 등록하는 메서드
+    void SetHealthComponent(UHealthComponent* HealthComp)
+    {
+        if (HealthComp)
+        {
+            HealthComp->OnHealthChanged.AddDynamic(this, &AUIHealthBar::UpdateHealthBar);
+        }
+    }
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	
-	
+    // 체력 변화 시 UI를 업데이트하는 메서드
+    UFUNCTION()
+    void UpdateHealthBar(float NewHealth)
+    {
+        // 새로운 체력 값으로 UI를 갱신하는 로직
+    }
 };

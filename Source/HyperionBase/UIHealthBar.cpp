@@ -11,18 +11,3 @@ AUIHealthBar::AUIHealthBar()
 	PrimaryActorTick.bCanEverTick = true;
 
 }
-
-// Called when the game starts or when spawned
-void AUIHealthBar::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void AUIHealthBar::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-

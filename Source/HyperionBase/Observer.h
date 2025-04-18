@@ -21,8 +21,11 @@ class HYPERIONBASE_API IObserver
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	
-	
+
+	// 주체로부터 상태 변화를 수신 하는 함수
+	// BlueprintNativeEvent로 정의 되며, C++ 또는 블루프린트에서 구현 가능
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Observer")
+	void OnNotify(int32 UpdateScore);
+
 };

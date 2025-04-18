@@ -13,17 +13,20 @@ class HYPERIONBASE_API UHealthComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
-	UHealthComponent();
+    UHealthComponent();
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+    // 델리게이트 선언 (옵저버들이 구독할 이벤트)
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float, NewHealth);
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+    // 체력이 변경될 때 호출되는 델리게이트
+    FOnHealthChanged OnHealthChanged;
 
-		
-	
+    void ChangeHealth(float Delta)
+    {
+        Health += Delta;
+        OnHealthChanged.Broadcast(Health);
+    }
+
+private:
+    float Health;
 };
