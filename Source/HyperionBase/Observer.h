@@ -15,7 +15,7 @@ class UObserver : public UInterface
 };
 
 /**
- * 
+ * reference : https://velog.io/@apzl79/Unreal-Engine-5-22-Observer-Pattern
  */
 class HYPERIONBASE_API IObserver
 {
