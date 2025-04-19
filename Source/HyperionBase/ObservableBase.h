@@ -6,13 +6,14 @@
 #include "Components/ActorComponent.h"
 #include "ObservableBase.generated.h"
 
+class IObserver;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HYPERIONBASE_API UObservableBase : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UObservableBase();
 
@@ -24,6 +25,17 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
-	
+public:
+	void Subscribe(TScriptInterface<IObserver> observer);
+	void Unsubscribe(TScriptInterface<IObserver> observer);
+	void NotifyObservers();
+
+	void IncreaseScore(int32 Amount);
+	int32 GetScore() const { return PlayerScore; }
+
+private:
+	TArray<TScriptInterface<IObserver>> Observers;
+
+	int32 PlayerScore;
+
 };

@@ -3,6 +3,7 @@
 
 #include "ObservableBase.h"
 
+#include "ObserverBase.h"
 
 // Sets default values for this component's properties
 UObservableBase::UObservableBase()
@@ -14,7 +15,6 @@ UObservableBase::UObservableBase()
 	// ...
 }
 
-
 // Called when the game starts
 void UObservableBase::BeginPlay()
 {
@@ -24,12 +24,27 @@ void UObservableBase::BeginPlay()
 	
 }
 
-
 // Called every frame
 void UObservableBase::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UObservableBase::Subscribe(TScriptInterface<IObserver> observer)
+{
+}
+
+void UObservableBase::Unsubscribe(TScriptInterface<IObserver> observer)
+{
+}
+
+void UObservableBase::NotifyObservers()
+{
+}
+
+void UObservableBase::IncreaseScore(int32 Amount)
+{
 }
 
