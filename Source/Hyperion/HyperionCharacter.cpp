@@ -108,6 +108,7 @@ void AHyperionCharacter::Move(const FInputActionValue& Value)
 	AddMovementInput(GetActorRightVector(), MovementVector.X);
 
 	//  the m_bIsCollectingFrameData ... turn on when it btn down, and turn off when btn up
+	// I must figure out relationship between this input event and player tick. 
 }
 
 void AHyperionCharacter::Look(const FInputActionValue& Value)
