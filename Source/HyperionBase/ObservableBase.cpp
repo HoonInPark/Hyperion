@@ -43,8 +43,3 @@ void UObservableBase::Unsubscribe(TScriptInterface<IObserver> observer)
 void UObservableBase::NotifyObservers()
 {
 }
-
-void UObservableBase::IncreaseScore(int32 Amount)
-{
-}
-

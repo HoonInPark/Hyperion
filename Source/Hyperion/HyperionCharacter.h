@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "HyperionCharacter.generated.h"
 
+class UObservableBase;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -67,5 +68,11 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+public:
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+
+private:
+	UObservableBase* m_Observable;
 };
 

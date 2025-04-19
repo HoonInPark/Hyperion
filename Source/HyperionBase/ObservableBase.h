@@ -21,7 +21,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -30,12 +30,18 @@ public:
 	void Unsubscribe(TScriptInterface<IObserver> observer);
 	void NotifyObservers();
 
-	void IncreaseScore(int32 Amount);
-	int32 GetScore() const { return PlayerScore; }
+	FORCEINLINE void UpdateData(FVector _NewData)
+	{
+		m_PlayerLoc = _NewData;
+
+		UE_LOG(LogTemp, Warning, TEXT("Player Location: %s"), *m_PlayerLoc.ToString());
+		NotifyObservers();
+	}
+	//int32 GetScore() const { return PlayerScore; }
 
 private:
 	TArray<TScriptInterface<IObserver>> Observers;
 
-	int32 PlayerScore;
+	FVector m_PlayerLoc;
 
 };

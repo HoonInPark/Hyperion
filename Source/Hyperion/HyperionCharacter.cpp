@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HyperionCharacter.h"
+
+#include "HyperionBase/ObservableBase.h"
 #include "HyperionProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -74,18 +76,34 @@ void AHyperionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
+void AHyperionCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	m_Observable = GetComponentByClass<UObservableBase>();
+	check(m_Observable);
+
+	m_Observable->UpdateData(GetActorLocation());
+}
+
+void AHyperionCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
 
 void AHyperionCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
-	{
-		// add movement 
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-		AddMovementInput(GetActorRightVector(), MovementVector.X);
-	}
+	if (!Controller) return;
+	
+	// add movement 
+	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+	AddMovementInput(GetActorRightVector(), MovementVector.X);
+
+	m_Observable->UpdateData(GetActorLocation());
 }
 
 void AHyperionCharacter::Look(const FInputActionValue& Value)
@@ -93,10 +111,9 @@ void AHyperionCharacter::Look(const FInputActionValue& Value)
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
+	if (!Controller) return;
+	
+	// add yaw and pitch input to controller
+	AddControllerYawInput(LookAxisVector.X);
+	AddControllerPitchInput(LookAxisVector.Y);
 }
