@@ -74,5 +74,7 @@ public:
 
 private:
 	UObservableBase* m_Observable;
+
+	bool m_bIsCollectingFrameData{ false };
 };
 

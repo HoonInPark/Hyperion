@@ -90,6 +90,10 @@ void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (m_bIsCollectingFrameData)
+	{
+		m_Observable->UpdateData(GetActorLocation());
+	}
 }
 
 void AHyperionCharacter::Move(const FInputActionValue& Value)
@@ -103,7 +107,7 @@ void AHyperionCharacter::Move(const FInputActionValue& Value)
 	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 	AddMovementInput(GetActorRightVector(), MovementVector.X);
 
-	m_Observable->UpdateData(GetActorLocation());
+	//  the m_bIsCollectingFrameData ... turn on when it btn down, and turn off when btn up
 }
 
 void AHyperionCharacter::Look(const FInputActionValue& Value)
