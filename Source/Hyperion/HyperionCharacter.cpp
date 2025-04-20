@@ -37,6 +37,7 @@ AHyperionCharacter::AHyperionCharacter()
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	m_Observable = CreateDefaultSubobject<UObservableBase>(TEXT("Observable"));
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -80,9 +81,7 @@ void AHyperionCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	m_Observable = GetComponentByClass<UObservableBase>();
 	check(m_Observable);
-
 	m_Observable->UpdateData(GetActorLocation());
 }
 
