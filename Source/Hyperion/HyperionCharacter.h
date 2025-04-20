@@ -56,6 +56,17 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	void StartCollectingFrameData()
+	{
+		UE_LOG(LogTemplateCharacter, Warning, TEXT("Start Collecting Frame Data"));
+		m_bIsCollectingFrameData = true; 
+	}
+	void StopCollectingFrameData() 
+	{
+		m_bIsCollectingFrameData = false;
+	}
+
+
 protected:
 	// APawn interface
 	virtual void NotifyControllerChanged() override;
@@ -73,7 +84,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-	UObservableBase* m_Observable;
+	UObservableBase* m_pObservable;
 
 	bool m_bIsCollectingFrameData{ false };
 };

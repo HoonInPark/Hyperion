@@ -37,7 +37,7 @@ AHyperionCharacter::AHyperionCharacter()
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-	m_Observable = CreateDefaultSubobject<UObservableBase>(TEXT("Observable"));
+	m_pObservable = CreateDefaultSubobject<UObservableBase>(TEXT("Observable"));
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -68,12 +68,17 @@ void AHyperionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Move);
 
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AHyperionCharacter::StartCollectingFrameData);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AHyperionCharacter::StopCollectingFrameData);
+
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Look);
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogTemplateCharacter, Error, 
+			TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), 
+			*GetNameSafe(this));
 	}
 }
 
@@ -81,8 +86,8 @@ void AHyperionCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	check(m_Observable);
-	m_Observable->UpdateData(GetActorLocation());
+	check(m_pObservable);
+	m_pObservable->UpdateData(GetActorLocation());
 }
 
 void AHyperionCharacter::Tick(float DeltaTime)
@@ -91,7 +96,7 @@ void AHyperionCharacter::Tick(float DeltaTime)
 
 	if (m_bIsCollectingFrameData)
 	{
-		m_Observable->UpdateData(GetActorLocation());
+		m_pObservable->UpdateData(GetActorLocation());
 	}
 }
 
@@ -105,9 +110,6 @@ void AHyperionCharacter::Move(const FInputActionValue& Value)
 	// add movement 
 	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 	AddMovementInput(GetActorRightVector(), MovementVector.X);
-
-	//  the m_bIsCollectingFrameData ... turn on when it btn down, and turn off when btn up
-	// I must figure out relationship between this input event and player tick. 
 }
 
 void AHyperionCharacter::Look(const FInputActionValue& Value)
