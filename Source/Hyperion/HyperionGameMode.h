@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HyperionBase/HealthComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "HyperionGameMode.generated.h"
 
@@ -24,5 +23,4 @@ public:
 
 private:
 	float m_Timer{ 0.f };
-	UHealthComponent* m_pHealthComp{ nullptr };
 };

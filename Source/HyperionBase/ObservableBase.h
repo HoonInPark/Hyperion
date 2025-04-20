@@ -26,18 +26,17 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	void Subscribe(TScriptInterface<IObserver> observer);
-	void Unsubscribe(TScriptInterface<IObserver> observer);
+	void Subscribe(TScriptInterface<IObserver> _Observer);
+	void Unsubscribe(TScriptInterface<IObserver> _Observer);
 	void NotifyObservers();
 
-	FORCEINLINE void UpdateData(FVector _NewData)
+	FORCEINLINE void UpdateData(const FVector& _NewData)
 	{
 		m_PlayerLoc = _NewData;
-
-		UE_LOG(LogTemp, Warning, TEXT("Player Location: %s"), *m_PlayerLoc.ToString());
 		NotifyObservers();
 	}
-	//int32 GetScore() const { return PlayerScore; }
+
+	FORCEINLINE FVector GetData() const { return m_PlayerLoc; }
 
 private:
 	TArray<TScriptInterface<IObserver>> Observers;

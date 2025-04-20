@@ -32,14 +32,27 @@ void UObservableBase::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 }
 
-void UObservableBase::Subscribe(TScriptInterface<IObserver> observer)
+void UObservableBase::Subscribe(TScriptInterface<IObserver> _Observer)
 {
+	Observers.Add(_Observer);
 }
 
-void UObservableBase::Unsubscribe(TScriptInterface<IObserver> observer)
+void UObservableBase::Unsubscribe(TScriptInterface<IObserver> _Observer)
 {
+	Observers.Remove(_Observer);
 }
 
 void UObservableBase::NotifyObservers()
 {
+	for (TScriptInterface<IObserver> Observer : Observers)
+	{
+		// Observer 객체가 유효하고 IObserver 인터페이스를 구현하고 있는지 확인
+		if (Observer.GetObject() && Observer.GetObject()->GetClass()->ImplementsInterface(UObserverBase::StaticClass()))
+		{
+			// 옵저버의 OnNotify 함수 호출 ( 점수 변화를 전달 )
+			// 실질적인 클래스 인스턴스 -> 함수를 호출
+			// 인터페이스 -> 호출
+			IObserverBase::Execute_OnNotify(Observer.GetObject(), m_PlayerLoc);
+		}
+	}
 }
