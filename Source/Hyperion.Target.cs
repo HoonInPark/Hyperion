@@ -12,5 +12,6 @@ public class HyperionTarget : TargetRules
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_5;
 		ExtraModuleNames.Add("Hyperion");
 		ExtraModuleNames.Add("HyperionBase");
+		ExtraModuleNames.Add("HyperionMulti");
 	}
 }

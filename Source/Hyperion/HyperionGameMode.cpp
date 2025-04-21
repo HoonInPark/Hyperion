@@ -2,8 +2,10 @@
 
 #include "HyperionGameMode.h"
 #include "HyperionCharacter.h"
+#include "HyperionPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "HyperionMulti/HyperionPlayerState.h"
 
 AHyperionGameMode::AHyperionGameMode()
 	: Super()
@@ -14,7 +16,8 @@ AHyperionGameMode::AHyperionGameMode()
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
 
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
-
+	PlayerControllerClass = AHyperionPlayerController::StaticClass();
+	PlayerStateClass = AHyperionPlayerState::StaticClass();
 }
 
 void AHyperionGameMode::BeginPlay()
