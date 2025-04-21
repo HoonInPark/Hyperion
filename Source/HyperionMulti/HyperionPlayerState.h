@@ -15,7 +15,7 @@ class HYPERIONMULTI_API AHyperionPlayerState : public APlayerState, public IObse
 {
 	GENERATED_BODY()
 	
-	//virtual void OnNotify(const FVector& _UpdateData) override;
+	virtual void OnNotify_Implementation(const FVector& _UpdateData) override;
 	
 	
 };
