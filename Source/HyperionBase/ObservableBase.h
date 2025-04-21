@@ -6,7 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ObservableBase.generated.h"
 
-class IObserver;
+class IObserverBase;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HYPERIONBASE_API UObservableBase : public UActorComponent
@@ -26,8 +26,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	void Subscribe(TScriptInterface<IObserver> _Observer);
-	void Unsubscribe(TScriptInterface<IObserver> _Observer);
+	void Subscribe(TScriptInterface<IObserverBase> _Observer);
+	void Unsubscribe(TScriptInterface<IObserverBase> _Observer);
 	void NotifyObservers();
 
 	FORCEINLINE void UpdateData(const FVector& _NewData)
@@ -39,7 +39,7 @@ public:
 	FORCEINLINE FVector GetData() const { return m_PlayerLoc; }
 
 private:
-	TArray<TScriptInterface<IObserver>> Observers;
+	TArray<TScriptInterface<IObserverBase>> Observers;
 
 	FVector m_PlayerLoc;
 

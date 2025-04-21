@@ -3,7 +3,6 @@
 #include "HyperionCharacter.h"
 
 #include "HyperionBase/ObservableBase.h"
-#include "HyperionBase/ObserverBase.h"
 #include "HyperionMulti/HyperionPlayerState.h"
 #include "HyperionProjectile.h"
 #include "Animation/AnimInstance.h"
@@ -106,11 +105,14 @@ void AHyperionCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	//auto pPlayerState = NewController->GetPlayerState<AHyperionPlayerState>();
-	//if (!pPlayerState) return;
-	//
-	//auto pObserver = Cast<IObserver>(pPlayerState);
-	//m_pObservable->Subscribe();
+	auto pPlayerState = NewController->GetPlayerState<AHyperionPlayerState>();
+	if (!pPlayerState) return;
+	
+	TScriptInterface<IObserverBase> ObserverInterface;
+	ObserverInterface.SetObject(pPlayerState);
+	ObserverInterface.SetInterface(Cast<IObserverBase>(pPlayerState));
+
+	m_pObservable->Subscribe(ObserverInterface);
 }
 
 void AHyperionCharacter::Move(const FInputActionValue& Value)

@@ -32,19 +32,19 @@ void UObservableBase::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 }
 
-void UObservableBase::Subscribe(TScriptInterface<IObserver> _Observer)
+void UObservableBase::Subscribe(TScriptInterface<IObserverBase> _Observer)
 {
 	Observers.Add(_Observer);
 }
 
-void UObservableBase::Unsubscribe(TScriptInterface<IObserver> _Observer)
+void UObservableBase::Unsubscribe(TScriptInterface<IObserverBase> _Observer)
 {
 	Observers.Remove(_Observer);
 }
 
 void UObservableBase::NotifyObservers()
 {
-	for (TScriptInterface<IObserver> Observer : Observers)
+	for (TScriptInterface<IObserverBase> Observer : Observers)
 	{
 		// Observer 객체가 유효하고 IObserver 인터페이스를 구현하고 있는지 확인
 		if (Observer.GetObject() && Observer.GetObject()->GetClass()->ImplementsInterface(UObserverBase::StaticClass()))
