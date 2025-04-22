@@ -5,7 +5,6 @@
 #include "HyperionPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
-#include "HyperionMulti/HyperionPlayerState.h"
 
 AHyperionGameMode::AHyperionGameMode()
 	: Super()
@@ -17,7 +16,6 @@ AHyperionGameMode::AHyperionGameMode()
 
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 	PlayerControllerClass = AHyperionPlayerController::StaticClass();
-	PlayerStateClass = AHyperionPlayerState::StaticClass();
 }
 
 void AHyperionGameMode::BeginPlay()

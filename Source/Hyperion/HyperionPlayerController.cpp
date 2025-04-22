@@ -3,6 +3,8 @@
 
 #include "HyperionPlayerController.h"
 
-
-
-
+void AHyperionPlayerController::OnNotify_Implementation(const FVector& _UpdateData)
+{
+	// Handle the notification from the observable
+	UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_UpdateData.ToString()));
+}
