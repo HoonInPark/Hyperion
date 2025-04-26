@@ -69,8 +69,8 @@ void AHyperionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Move);
 
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AHyperionCharacter::SetCharStatusAsMove2D);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AHyperionCharacter::SetCharStatusAsNone);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AHyperionCharacter::SetCharStatus_MoveWASD);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AHyperionCharacter::SetCharStatus_None);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Look);
@@ -97,7 +97,7 @@ void AHyperionCharacter::Tick(float DeltaTime)
 
 	switch (m_CharStatus)
 	{
-	case ECharStatus::E_Move2D:
+	case ECharStatus::E_WASD:
 	{
 		// Update the observable with the current location
 		m_pObservable->UpdateData(GetActorLocation());

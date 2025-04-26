@@ -20,8 +20,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 enum class ECharStatus
 {
 	E_None,
-	E_Move2D, // char is WASD moving
-	E_Move3D, // char is in the air. it may be receiving WASD keys.
+	E_WASD, // char is WASD moving
+	E_Jump, // char is in the air. it may be receiving WASD keys.
 };
 
 UCLASS(config=Game)
@@ -63,8 +63,8 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	FORCEINLINE void SetCharStatusAsMove2D() { m_CharStatus = ECharStatus::E_Move2D; }
-	FORCEINLINE void SetCharStatusAsNone() { m_CharStatus = ECharStatus::E_None; }
+	FORCEINLINE void SetCharStatus_MoveWASD() { m_CharStatus = ECharStatus::E_WASD; }
+	FORCEINLINE void SetCharStatus_None() { m_CharStatus = ECharStatus::E_None; }
 
 protected:
 	// APawn interface
