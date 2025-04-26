@@ -17,6 +17,13 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+enum class ECharStatus
+{
+	E_None,
+	E_Move2D, // char is WASD moving
+	E_Move3D, // char is in the air. it may be receiving WASD keys.
+};
+
 UCLASS(config=Game)
 class AHyperionCharacter : public ACharacter
 {
@@ -56,9 +63,8 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	void StartCollectingFrameData() { m_bIsCollectingFrameData = true; }
-	void StopCollectingFrameData() { m_bIsCollectingFrameData = false; }
-
+	FORCEINLINE void SetCharStatusAsMove2D() { m_CharStatus = ECharStatus::E_Move2D; }
+	FORCEINLINE void SetCharStatusAsNone() { m_CharStatus = ECharStatus::E_None; }
 
 protected:
 	// APawn interface
@@ -80,6 +86,6 @@ public:
 private:
 	UObservableBase* m_pObservable;
 
-	bool m_bIsCollectingFrameData{ false };
+	ECharStatus m_CharStatus;
 };
 

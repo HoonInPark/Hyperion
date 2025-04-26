@@ -23,7 +23,7 @@ AHyperionCharacter::AHyperionCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-		
+
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
@@ -69,16 +69,16 @@ void AHyperionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Move);
 
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AHyperionCharacter::StartCollectingFrameData);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AHyperionCharacter::StopCollectingFrameData);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AHyperionCharacter::SetCharStatusAsMove2D);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AHyperionCharacter::SetCharStatusAsNone);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Look);
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, 
-			TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), 
+		UE_LOG(LogTemplateCharacter, Error,
+			TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."),
 			*GetNameSafe(this));
 	}
 }
@@ -95,9 +95,16 @@ void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (m_bIsCollectingFrameData)
+	switch (m_CharStatus)
 	{
+	case ECharStatus::E_Move2D:
+	{
+		// Update the observable with the current location
 		m_pObservable->UpdateData(GetActorLocation());
+		break;
+	}
+	default:
+		break;
 	}
 }
 
@@ -118,7 +125,7 @@ void AHyperionCharacter::Move(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (!Controller) return;
-	
+
 	// add movement 
 	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 	AddMovementInput(GetActorRightVector(), MovementVector.X);
@@ -130,7 +137,7 @@ void AHyperionCharacter::Look(const FInputActionValue& Value)
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	if (!Controller) return;
-	
+
 	// add yaw and pitch input to controller
 	AddControllerYawInput(LookAxisVector.X);
 	AddControllerPitchInput(LookAxisVector.Y);
