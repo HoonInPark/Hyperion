@@ -91,6 +91,7 @@ void AHyperionCharacter::BeginPlay()
 	m_pObservable->UpdateData(GetActorLocation());
 }
 
+// in engine loop, rhi funcs called after this tick func returned
 void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
