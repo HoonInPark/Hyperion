@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ServerHyperion",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "HoonInPark",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ServerHyperion",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
