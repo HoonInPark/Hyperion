@@ -4,10 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include <vector>
 #include "ObservableBase.generated.h"
-
-using namespace std;
 
 class IObserverBase;
 
@@ -26,7 +23,7 @@ public:
 	void NotifyObservers();
 
 	void UpdateData(
-		const vector<bool>& _InHeader, 
+		const TArray<bool>& _InHeader,
 		const FVector& _InNewVec,
 		const FRotator& _InNewRot,
 		bool _bInNewInAir);
@@ -36,7 +33,7 @@ public:
 private:
 	TArray<TScriptInterface<IObserverBase>> Observers;
 
-	vector<bool> m_PlayerStates;
+	TArray<bool> m_PlayerStates;
 	FVector m_PlayerLoc;
 	FRotator m_PlayerRot;
 	bool m_bPlayerInAir;

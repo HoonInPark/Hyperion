@@ -5,10 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
-#include <vector>
 #include "HyperionCharacter.generated.h"
-
-using namespace std;
 
 class UObservableBase;
 class UInputComponent;
@@ -95,7 +92,7 @@ public:
 private:
 	UObservableBase* m_pObservable;
 
-	vector<bool> m_CharStates;
+	TArray<bool> m_CharStates;
 	FVector VecToSend{ 0.f, 0.f, 0.f };
 	FRotator RotToSend{ 0.f, 0.f, 0.f };
 	bool bInAirToSend{ false };

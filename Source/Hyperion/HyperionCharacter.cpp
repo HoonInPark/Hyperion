@@ -20,7 +20,6 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 // AHyperionCharacter
 
 AHyperionCharacter::AHyperionCharacter()
-	: m_CharStates(static_cast<int32>(ECharStatus::E_MAX), false)
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
@@ -40,6 +39,8 @@ AHyperionCharacter::AHyperionCharacter()
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
 	m_pObservable = CreateDefaultSubobject<UObservableBase>(TEXT("Observable"));
+
+	m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -146,7 +147,7 @@ void AHyperionCharacter::Tick(float DeltaTime)
 		RotToSend,
 		bInAirToSend);
 
-	fill(m_CharStates.begin(), m_CharStates.end(), false);
+	m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
 	VecToSend = FVector(0.f, 0.f, 0.f);
 	RotToSend = FRotator(0.f, 0.f, 0.f);
 	bInAirToSend = false;

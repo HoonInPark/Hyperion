@@ -45,7 +45,7 @@ void UObservableBase::NotifyObservers()
 }
 
 void UObservableBase::UpdateData(
-	const vector<bool>& _InHeader,
+	const TArray<bool>& _InHeader,
 	const FVector& _InNewVec,
 	const FRotator& _InNewRot,
 	bool _bInNewInAir)
