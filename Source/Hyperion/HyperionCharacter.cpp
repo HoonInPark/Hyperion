@@ -20,6 +20,7 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 // AHyperionCharacter
 
 AHyperionCharacter::AHyperionCharacter()
+	: m_CharStates(static_cast<int32>(ECharStatus::E_MAX), false)
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
@@ -66,11 +67,14 @@ void AHyperionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AHyperionCharacter::StartCharStatus_AIR);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AHyperionCharacter::StopCharStatus_MOUSE);
+
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Move);
 
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AHyperionCharacter::SetCharStatus_MoveWASD);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AHyperionCharacter::SetCharStatus_None);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AHyperionCharacter::StartCharStatus_WASD);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AHyperionCharacter::StopCharStatus_WASD);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Look);
@@ -96,7 +100,13 @@ void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	switch (m_CharStatus)
+	for (auto CharState : m_CharStates)
+	{
+
+	}
+
+	/*
+	switch (m_CharStates)
 	{
 	case ECharStatus::E_WASD:
 	{
@@ -107,6 +117,7 @@ void AHyperionCharacter::Tick(float DeltaTime)
 	default:
 		break;
 	}
+	*/
 }
 
 void AHyperionCharacter::PossessedBy(AController* NewController)

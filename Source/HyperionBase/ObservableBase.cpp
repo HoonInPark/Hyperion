@@ -15,23 +15,6 @@ UObservableBase::UObservableBase()
 	// ...
 }
 
-// Called when the game starts
-void UObservableBase::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// ...
-	
-}
-
-// Called every frame
-void UObservableBase::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-
 void UObservableBase::Subscribe(TScriptInterface<IObserverBase> _Observer)
 {
 	Observers.Add(_Observer);
@@ -55,4 +38,13 @@ void UObservableBase::NotifyObservers()
 			IObserverBase::Execute_OnNotify(Observer.GetObject(), m_PlayerLoc);
 		}
 	}
+}
+
+void UObservableBase::UpdateData(
+	const FVector& _InNewVec,
+	const FRotator& _InNewRot,
+	bool _bInNewInAir)
+{
+	m_PlayerLoc = _InNewVec;
+	NotifyObservers();
 }

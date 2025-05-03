@@ -5,7 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include <vector>
 #include "HyperionCharacter.generated.h"
+
+using namespace std;
 
 class UObservableBase;
 class UInputComponent;
@@ -19,9 +22,11 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 enum class ECharStatus
 {
-	E_None,
-	E_WASD, // char is WASD moving
-	E_Jump, // char is in the air. it may be receiving WASD keys.
+	E_WASD = 0, // char is WASD moving
+	E_MOUSE, // char is WASD moving
+	E_AIR, // char is in the air. it may be receiving WASD keys.
+	
+	E_MAX
 };
 
 UCLASS(config=Game)
@@ -63,8 +68,12 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	FORCEINLINE void SetCharStatus_MoveWASD() { m_CharStatus = ECharStatus::E_WASD; }
-	FORCEINLINE void SetCharStatus_None() { m_CharStatus = ECharStatus::E_None; }
+	FORCEINLINE void StartCharStatus_WASD() { m_CharStates[static_cast<int>(ECharStatus::E_WASD)] = true; }
+	FORCEINLINE void StopCharStatus_WASD() { m_CharStates[static_cast<int>(ECharStatus::E_WASD)] = false; }
+	FORCEINLINE void StartCharStatus_MOUSE() { m_CharStates[static_cast<int>(ECharStatus::E_MOUSE)] = true; }
+	FORCEINLINE void StopCharStatus_MOUSE() { m_CharStates[static_cast<int>(ECharStatus::E_MOUSE)] = false; }
+	FORCEINLINE void StartCharStatus_AIR() { m_CharStates[static_cast<int>(ECharStatus::E_AIR)] = true; }
+	FORCEINLINE void StopCharStatus_AIR() { m_CharStates[static_cast<int>(ECharStatus::E_AIR)] = false; }
 
 protected:
 	// APawn interface
@@ -86,6 +95,7 @@ public:
 private:
 	UObservableBase* m_pObservable;
 
-	ECharStatus m_CharStatus;
+	vector<bool> m_CharStates;
+	//ECharStatus m_CharStates;
 };
 

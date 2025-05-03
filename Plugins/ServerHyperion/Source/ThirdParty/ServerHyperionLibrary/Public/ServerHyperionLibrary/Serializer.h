@@ -121,7 +121,7 @@ public:
 	inline bool GetIsJumping() const { return m_IsJumping; }
 
 private:
-	__forceinline char // return byte
+	inline char // return byte
 		GetSize(Header _InHeaderIdx)
 	{
 		switch (_InHeaderIdx)
