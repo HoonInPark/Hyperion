@@ -16,4 +16,6 @@ class HYPERION_API AHyperionPlayerController : public APlayerController, public 
 	GENERATED_BODY()
 	
 	virtual void OnNotify_Implementation(const FVector& _UpdateData) override;
+
+	bool test{ true };
 };

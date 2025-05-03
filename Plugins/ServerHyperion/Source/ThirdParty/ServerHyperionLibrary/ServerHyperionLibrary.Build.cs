@@ -36,5 +36,12 @@ public class ServerHyperionLibrary : ModuleRules
 			PublicDelayLoadDLLs.Add(ExampleSoPath);
 			RuntimeDependencies.Add(ExampleSoPath);
 		}
-	}
+
+		// expose components of this module for other module referencing
+        PublicIncludePaths.AddRange(new string[] {
+            Path.Combine(ModuleDirectory, "Public"),
+            Path.Combine(ModuleDirectory, "Public/ServerHyperionLibrary") // 필요하다면
+        });
+
+    }
 }
