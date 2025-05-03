@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include <vector>
 
 #include "ObserverBase.generated.h"
+
+using namespace std;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -24,6 +27,10 @@ class HYPERIONBASE_API IObserverBase
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Observer")
-	void OnNotify(const FVector& _UpdateData);
+	void OnNotify(
+		const vector<bool>& _InHeader,
+		const FVector& _InNewVec,
+		const FRotator& _InNewRot,
+		bool _bInNewInAir);
 	
 };

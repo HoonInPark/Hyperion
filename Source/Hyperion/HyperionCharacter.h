@@ -96,6 +96,9 @@ private:
 	UObservableBase* m_pObservable;
 
 	vector<bool> m_CharStates;
-	//ECharStatus m_CharStates;
+	FVector VecToSend{ 0.f, 0.f, 0.f };
+	FRotator RotToSend{ 0.f, 0.f, 0.f };
+	bool bInAirToSend{ false };
+
 };
 

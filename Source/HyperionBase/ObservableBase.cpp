@@ -35,16 +35,26 @@ void UObservableBase::NotifyObservers()
 			// 옵저버의 OnNotify 함수 호출 ( 점수 변화를 전달 )
 			// 실질적인 클래스 인스턴스 -> 함수를 호출
 			// 인터페이스 -> 호출
-			IObserverBase::Execute_OnNotify(Observer.GetObject(), m_PlayerLoc);
+			IObserverBase::Execute_OnNotify(Observer.GetObject(), 
+				m_PlayerStates,
+				m_PlayerLoc,
+				m_PlayerRot,
+				m_bPlayerInAir);
 		}
 	}
 }
 
 void UObservableBase::UpdateData(
+	const vector<bool>& _InHeader,
 	const FVector& _InNewVec,
 	const FRotator& _InNewRot,
 	bool _bInNewInAir)
 {
+	m_PlayerStates = _InHeader;
+	
 	m_PlayerLoc = _InNewVec;
+	m_PlayerRot = _InNewRot;
+	m_bPlayerInAir = _bInNewInAir;
+
 	NotifyObservers();
 }

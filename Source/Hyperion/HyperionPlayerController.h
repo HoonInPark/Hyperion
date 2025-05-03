@@ -5,7 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "HyperionBase/ObserverBase.h"
+#include <vector>
 #include "HyperionPlayerController.generated.h"
+
+using namespace std;
 
 /**
  * 
@@ -15,5 +18,9 @@ class HYPERION_API AHyperionPlayerController : public APlayerController, public 
 {
 	GENERATED_BODY()
 	
-	virtual void OnNotify_Implementation(const FVector& _UpdateData) override;
+	virtual void OnNotify_Implementation(
+		const vector<bool>& _InHeader,
+		const FVector& _InNewVec,
+		const FRotator& _InNewRot,
+		bool _bInNewInAir) override;
 };

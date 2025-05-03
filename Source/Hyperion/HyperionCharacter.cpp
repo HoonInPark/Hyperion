@@ -92,7 +92,12 @@ void AHyperionCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	check(m_pObservable);
-	m_pObservable->UpdateData(GetActorLocation());
+
+	m_pObservable->UpdateData(
+		m_CharStates,
+		GetActorLocation(),
+		GetActorRotation(),
+		false);
 }
 
 // in engine loop, rhi funcs called after this tick func returned
@@ -100,24 +105,51 @@ void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	for (auto CharState : m_CharStates)
+	for (int i = 0; i < static_cast<int>(ECharStatus::E_MAX); ++i)
 	{
+		switch (static_cast<ECharStatus>(i))
+		{
+		case ECharStatus::E_WASD:
+		{
+			if (m_CharStates[i])
+				VecToSend = GetActorLocation();
 
+			break;
+		}
+		case ECharStatus::E_MOUSE:
+		{
+			if (m_CharStates[i])
+				RotToSend = GetActorRotation();
+
+			break;
+		}
+		case ECharStatus::E_AIR:
+		{
+			if (m_CharStates[i])
+			{
+				m_CharStates[static_cast<int>(ECharStatus::E_WASD)] = true;
+				
+				VecToSend = GetActorLocation();
+				bInAirToSend = true;
+			}
+
+			break;
+		}
+		default:
+			break;
+		}
 	}
 
-	/*
-	switch (m_CharStates)
-	{
-	case ECharStatus::E_WASD:
-	{
-		// Update the observable with the current location
-		m_pObservable->UpdateData(GetActorLocation());
-		break;
-	}
-	default:
-		break;
-	}
-	*/
+	m_pObservable->UpdateData(
+		m_CharStates,
+		VecToSend,
+		RotToSend,
+		bInAirToSend);
+
+	fill(m_CharStates.begin(), m_CharStates.end(), false);
+	VecToSend = FVector(0.f, 0.f, 0.f);
+	RotToSend = FRotator(0.f, 0.f, 0.f);
+	bInAirToSend = false;
 }
 
 void AHyperionCharacter::PossessedBy(AController* NewController)

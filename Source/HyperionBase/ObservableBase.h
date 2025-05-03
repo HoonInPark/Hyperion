@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include <vector>
 #include "ObservableBase.generated.h"
+
+using namespace std;
 
 class IObserverBase;
 
@@ -23,17 +26,19 @@ public:
 	void NotifyObservers();
 
 	void UpdateData(
-		const FVector& _InNewVec = FVector(), 
-		const FRotator& _InNewRot = FRotator(),
-		bool _bInNewInAir = false);
+		const vector<bool>& _InHeader, 
+		const FVector& _InNewVec,
+		const FRotator& _InNewRot,
+		bool _bInNewInAir);
 
 	FORCEINLINE FVector GetData() const { return m_PlayerLoc; }
 
 private:
 	TArray<TScriptInterface<IObserverBase>> Observers;
 
+	vector<bool> m_PlayerStates;
 	FVector m_PlayerLoc;
 	FRotator m_PlayerRot;
-	bool m_bInAir;
+	bool m_bPlayerInAir;
 
 };
