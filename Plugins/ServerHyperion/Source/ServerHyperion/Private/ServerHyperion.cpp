@@ -18,16 +18,19 @@ void FServerHyperionModule::StartupModule()
 	FString BaseDir = IPluginManager::Get().FindPlugin("ServerHyperion")->GetBaseDir();
 
 	// Add on the relative location of the third party dll and load it
-	FString LibraryPath;
+	FString ExampleLibraryPath;
+	FString ClientSocketLibraryPath;
 #if PLATFORM_WINDOWS
-	LibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/ServerHyperionLibrary/Win64/ExampleLibrary.dll"));
+	ExampleLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/ServerHyperionLibrary/Win64/ExampleLibrary.dll"));
+	ClientSocketLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/ServerHyperionLibrary/Win64/ClientSocket.dll"));
 #elif PLATFORM_MAC
     LibraryPath = FPaths::Combine(*BaseDir, TEXT("Source/ThirdParty/ServerHyperionLibrary/Mac/Release/libExampleLibrary.dylib"));
 #elif PLATFORM_LINUX
 	LibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/ServerHyperionLibrary/Linux/x86_64-unknown-linux-gnu/libExampleLibrary.so"));
 #endif // PLATFORM_WINDOWS
 
-	ExampleLibraryHandle = !LibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*LibraryPath) : nullptr;
+	ExampleLibraryHandle = !ExampleLibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*ExampleLibraryPath) : nullptr;
+	ClientSocketLibraryHandle = !ClientSocketLibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*ClientSocketLibraryPath) : nullptr;
 
 	if (ExampleLibraryHandle)
 	{
@@ -48,6 +51,8 @@ void FServerHyperionModule::ShutdownModule()
 	// Free the dll handle
 	FPlatformProcess::FreeDllHandle(ExampleLibraryHandle);
 	ExampleLibraryHandle = nullptr;
+	FPlatformProcess::FreeDllHandle(ClientSocketLibraryHandle);
+	ClientSocketLibraryHandle = nullptr;
 }
 
 #undef LOCTEXT_NAMESPACE

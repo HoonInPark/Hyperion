@@ -14,12 +14,15 @@ public class ServerHyperionLibrary : ModuleRules
 		{
 			// Add the import library
 			PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, "x64", "Release", "ExampleLibrary.lib"));
+			PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, "x64", "Release", "ClientSocket.lib"));
 
 			// Delay-load the DLL, so we can load it from the right place first
 			PublicDelayLoadDLLs.Add("ExampleLibrary.dll");
+			PublicDelayLoadDLLs.Add("ClientSocket.dll");
 
 			// Ensure that the DLL is staged along with the executable
 			RuntimeDependencies.Add("$(PluginDir)/Binaries/ThirdParty/ServerHyperionLibrary/Win64/ExampleLibrary.dll");
+			RuntimeDependencies.Add("$(PluginDir)/Binaries/ThirdParty/ServerHyperionLibrary/Win64/ClientSocket.dll");
 		}
 		else if (Target.Platform == UnrealTargetPlatform.Mac)
 		{
