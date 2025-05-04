@@ -106,7 +106,7 @@ void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	for (int i = 0; i < static_cast<int>(ECharStatus::E_MAX); ++i)
+	for (int i = 0; i < static_cast<int32>(ECharStatus::E_MAX); ++i)
 	{
 		switch (static_cast<ECharStatus>(i))
 		{
@@ -128,7 +128,7 @@ void AHyperionCharacter::Tick(float DeltaTime)
 		{
 			if (m_CharStates[i])
 			{
-				m_CharStates[static_cast<int>(ECharStatus::E_WASD)] = true;
+				m_CharStates[static_cast<int32>(ECharStatus::E_WASD)] = true;
 				
 				VecToSend = GetActorLocation();
 				bInAirToSend = true;
@@ -147,7 +147,7 @@ void AHyperionCharacter::Tick(float DeltaTime)
 		RotToSend,
 		bInAirToSend);
 
-	m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
+	//m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
 	VecToSend = FVector(0.f, 0.f, 0.f);
 	RotToSend = FRotator(0.f, 0.f, 0.f);
 	bInAirToSend = false;
