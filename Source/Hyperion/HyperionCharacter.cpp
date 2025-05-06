@@ -148,8 +148,8 @@ void AHyperionCharacter::Tick(float DeltaTime)
 		bInAirToSend);
 
 	//m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
-	VecToSend = FVector(0.f, 0.f, 0.f);
-	RotToSend = FRotator(0.f, 0.f, 0.f);
+	VecToSend = FVector(/*0.f, 0.f, 0.f*/);
+	RotToSend = FRotator(/*0.f, 0.f, 0.f*/);
 	bInAirToSend = false;
 }
 
