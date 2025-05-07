@@ -47,7 +47,7 @@ SourceArt/**/*.tga
 
 # Binary Files
 Binaries/*
-Plugins/**/Binaries/*
+Plugins/**/Binaries/Win64/*
 
 # Builds
 Build/*
@@ -72,3 +72,11 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# Whitelist for libraries of server hyperion
+# Hyperion\Plugins\ServerHyperion\Source\ThirdParty\ServerHyperionLibrary\x64\Release
+!Plugins/*/Source/ThirdParty/*/x64/Release/*.dll
+!Plugins/*/Source/ThirdParty/*/x64/Release/*.lib
+
+# Hyperion\Plugins\ServerHyperion\Binaries\ThirdParty\ServerHyperionLibrary\Win64
+!Plugins/**/Binaries/ThirdParty/*/Win64/*.dll
