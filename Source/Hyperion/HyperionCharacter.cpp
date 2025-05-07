@@ -107,11 +107,15 @@ void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (m_TimeSinceLastUpdate < 0.2f) return;
+
 	m_pObservable->UpdateData(
 		m_CharStates,
 		GetActorLocation(),
 		GetControlRotation(), // if GetActorRotation() is called, not GetControlRotation(), it only returns yaw changes
 		GetCharacterMovement()->IsFalling());
+
+	m_TimeSinceLastUpdate = 0.f;
 
 	//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(GetCharacterMovement()->IsFalling() ? FString("IsFalling : TRUE") : FString("IsFalling : FALSE")));
 }

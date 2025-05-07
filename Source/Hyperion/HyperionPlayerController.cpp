@@ -8,7 +8,6 @@
 AHyperionPlayerController::AHyperionPlayerController()
 {
 	m_ClientSocket = CreateDefaultSubobject<UClientSocket>(TEXT("ClientSocket"));
-
 }
 
 void AHyperionPlayerController::OnNotify_Implementation(

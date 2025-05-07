@@ -88,6 +88,8 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 
 private:
+	float m_TimeSinceLastUpdate{ 0.f };
+
 	UObservableBase* m_pObservable;
 
 	TArray<bool> m_CharStates;
