@@ -79,4 +79,5 @@ DerivedDataCache/*
 !Plugins/*/Source/ThirdParty/*/x64/Release/*.lib
 
 # Hyperion\Plugins\ServerHyperion\Binaries\ThirdParty\ServerHyperionLibrary\Win64
-!Plugins/**/Binaries/ThirdParty/*/Win64/*.dll
+!Plugins/*/Binaries/ThirdParty/*/Win64/*.dll
+
