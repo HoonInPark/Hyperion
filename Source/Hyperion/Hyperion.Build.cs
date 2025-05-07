@@ -16,7 +16,7 @@ public class Hyperion : ModuleRules
             "InputCore",
             "EnhancedInput",
             "HyperionBase",
-            "ServerHyperionLibrary"
+            "ServerHyperion"
         });
     }
 }

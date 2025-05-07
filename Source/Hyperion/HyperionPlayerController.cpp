@@ -3,7 +3,13 @@
 
 #include "HyperionPlayerController.h"
 #include "HyperionCharacter.h"
-//#include "ServerHyperionLibrary/Serializer.h" 
+#include "ServerHyperion/Public/ClientSocket.h" 
+
+AHyperionPlayerController::AHyperionPlayerController()
+{
+	m_ClientSocket = CreateDefaultSubobject<UClientSocket>(TEXT("ClientSocket"));
+
+}
 
 void AHyperionPlayerController::OnNotify_Implementation(
 	const TArray<bool>& _InHeader,
