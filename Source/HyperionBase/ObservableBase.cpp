@@ -36,7 +36,7 @@ void UObservableBase::NotifyObservers()
 			// 실질적인 클래스 인스턴스 -> 함수를 호출
 			// 인터페이스 -> 호출
 			IObserverBase::Execute_OnNotify(Observer.GetObject(), 
-				m_PlayerStates,
+				m_PlayerHeader,
 				m_PlayerLoc,
 				m_PlayerRot,
 				m_bPlayerInAir);
@@ -50,7 +50,7 @@ void UObservableBase::UpdateData(
 	const FRotator& _InNewRot,
 	bool _bInNewInAir)
 {
-	m_PlayerStates = _InHeader;
+	m_PlayerHeader = _InHeader;
 	
 	m_PlayerLoc = _InNewVec;
 	m_PlayerRot = _InNewRot;

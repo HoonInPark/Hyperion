@@ -33,7 +33,8 @@ public:
 private:
 	TArray<TScriptInterface<IObserverBase>> Observers;
 
-	TArray<bool> m_PlayerStates;
+	TArray<bool> m_PlayerHeader;
+	
 	FVector m_PlayerLoc;
 	FRotator m_PlayerRot;
 	bool m_bPlayerInAir;

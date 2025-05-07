@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
@@ -68,9 +69,6 @@ void AHyperionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AHyperionCharacter::StartCharStatus_AIR);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AHyperionCharacter::StopCharStatus_MOUSE);
-
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Move);
 
@@ -79,6 +77,9 @@ void AHyperionCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHyperionCharacter::Look);
+
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Started, this, &AHyperionCharacter::StartCharStatus_MOUSE);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Completed, this, &AHyperionCharacter::StopCharStatus_MOUSE);
 	}
 	else
 	{
@@ -95,7 +96,7 @@ void AHyperionCharacter::BeginPlay()
 	check(m_pObservable);
 
 	m_pObservable->UpdateData(
-		m_CharStates,
+		{ true, true },
 		GetActorLocation(),
 		GetActorRotation(),
 		false);
@@ -106,51 +107,13 @@ void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	for (int i = 0; i < static_cast<int32>(ECharStatus::E_MAX); ++i)
-	{
-		switch (static_cast<ECharStatus>(i))
-		{
-		case ECharStatus::E_WASD:
-		{
-			if (m_CharStates[i])
-				VecToSend = GetActorLocation();
-
-			break;
-		}
-		case ECharStatus::E_MOUSE:
-		{
-			if (m_CharStates[i])
-				RotToSend = GetActorRotation();
-
-			break;
-		}
-		case ECharStatus::E_AIR:
-		{
-			if (m_CharStates[i])
-			{
-				m_CharStates[static_cast<int32>(ECharStatus::E_WASD)] = true;
-				
-				VecToSend = GetActorLocation();
-				bInAirToSend = true;
-			}
-
-			break;
-		}
-		default:
-			break;
-		}
-	}
-
 	m_pObservable->UpdateData(
 		m_CharStates,
-		VecToSend,
-		RotToSend,
-		bInAirToSend);
+		GetActorLocation(),
+		GetControlRotation(), // if GetActorRotation() is called, not GetControlRotation(), it only returns yaw changes
+		GetCharacterMovement()->IsFalling());
 
-	//m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
-	VecToSend = FVector(/*0.f, 0.f, 0.f*/);
-	RotToSend = FRotator(/*0.f, 0.f, 0.f*/);
-	bInAirToSend = false;
+	//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(GetCharacterMovement()->IsFalling() ? FString("IsFalling : TRUE") : FString("IsFalling : FALSE")));
 }
 
 void AHyperionCharacter::PossessedBy(AController* NewController)

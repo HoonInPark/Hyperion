@@ -21,7 +21,7 @@ enum class ECharStatus
 {
 	E_WASD = 0, // char is WASD moving
 	E_MOUSE, // char is WASD moving
-	E_AIR, // char is in the air. it may be receiving WASD keys.
+	//E_AIR, // char is in the air. it may be receiving WASD keys.
 	
 	E_MAX
 };
@@ -69,8 +69,6 @@ protected:
 	FORCEINLINE void StopCharStatus_WASD() { m_CharStates[static_cast<int>(ECharStatus::E_WASD)] = false; }
 	FORCEINLINE void StartCharStatus_MOUSE() { m_CharStates[static_cast<int>(ECharStatus::E_MOUSE)] = true; }
 	FORCEINLINE void StopCharStatus_MOUSE() { m_CharStates[static_cast<int>(ECharStatus::E_MOUSE)] = false; }
-	FORCEINLINE void StartCharStatus_AIR() { m_CharStates[static_cast<int>(ECharStatus::E_AIR)] = true; }
-	FORCEINLINE void StopCharStatus_AIR() { m_CharStates[static_cast<int>(ECharStatus::E_AIR)] = false; }
 
 protected:
 	// APawn interface
@@ -93,9 +91,5 @@ private:
 	UObservableBase* m_pObservable;
 
 	TArray<bool> m_CharStates;
-	FVector VecToSend{ 0.f, 0.f, 0.f };
-	FRotator RotToSend{ 0.f, 0.f, 0.f };
-	bool bInAirToSend{ false };
-
 };
 
