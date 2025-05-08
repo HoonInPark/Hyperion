@@ -38,7 +38,6 @@ int32 UClientSocket::DeactivateThreads()
 FClientRunnable_Send::FClientRunnable_Send()
 {
 	pThread = FRunnableThread::Create(this, TEXT("ClientSendThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
-
 }
 
 FClientRunnable_Send::~FClientRunnable_Send()
@@ -47,19 +46,19 @@ FClientRunnable_Send::~FClientRunnable_Send()
 
 bool FClientRunnable_Send::Init()
 {
-
+	// socket initialize
+	
 
 	return true;
 }
 
 uint32 FClientRunnable_Send::Run()
 {
-	while (true)
+	while (m_bIsRunning)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("test"));
+		
 
-		//FPlatformProcess::Sleep(0.001f);
-		FPlatformProcess::Sleep(0.1f);
+		FPlatformProcess::Sleep(0.001f);
 	}
 
 	return 0;
@@ -67,10 +66,17 @@ uint32 FClientRunnable_Send::Run()
 
 void FClientRunnable_Send::Stop() // 
 {
+	m_bIsRunning = false;
 }
 
-void FClientRunnable_Send::Exit() // called when func Run() is returned automatically
+void FClientRunnable_Send::Exit() // called when func Run() is returned
 {
+	pThread->WaitForCompletion();
+
+	delete pThread;
+	pThread = nullptr;
+	
+	delete this;
 }
 
 //////////////////////////////////////////////////////////////////////////

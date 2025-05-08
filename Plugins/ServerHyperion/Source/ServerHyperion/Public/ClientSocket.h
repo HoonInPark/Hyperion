@@ -40,7 +40,7 @@ public:
 	virtual void Exit() override;
 
 private:
-	bool m_bIsRunning{ false };
+	bool m_bIsRunning{ true };
 	FRunnableThread* pThread{ nullptr };
 
 };
@@ -59,7 +59,7 @@ public:
 	virtual void Exit() override;
 
 private:
-	bool m_bIsRunning{ false };
+	bool m_bIsRunning{ true };
 	FRunnableThread* pThread{ nullptr };
 
 };
