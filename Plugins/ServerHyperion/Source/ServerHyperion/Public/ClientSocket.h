@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "ClientSocket.generated.h"
 
+class FClientRunnable_Send;
+class FClientRunnable_Recv;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SERVERHYPERION_API UClientSocket : public UActorComponent
@@ -16,11 +18,12 @@ public:
 	// Sets default values for this component's properties
 	UClientSocket();
 
-	virtual void Activate(bool bReset = false) override;
+	int32 ActivateThreads();
+	int32 DeactivateThreads();
 
 private:
-	
-	
+	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
+	FClientRunnable_Recv* m_pClientRunnable_Recv{ nullptr };
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -38,6 +41,7 @@ public:
 
 private:
 	bool m_bIsRunning{ false };
+	FRunnableThread* pThread{ nullptr };
 
 };
 
@@ -56,5 +60,6 @@ public:
 
 private:
 	bool m_bIsRunning{ false };
+	FRunnableThread* pThread{ nullptr };
 
 };

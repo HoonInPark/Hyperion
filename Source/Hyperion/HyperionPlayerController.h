@@ -20,6 +20,9 @@ class HYPERION_API AHyperionPlayerController : public APlayerController, public 
 public:
 	AHyperionPlayerController();
 
+	virtual void OnPossess(APawn* aPawn) override;
+	virtual void OnUnPossess() override;
+
 	virtual void OnNotify_Implementation(
 		const TArray<bool>& _InHeader,
 		const FVector& _InNewVec,

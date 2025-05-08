@@ -10,6 +10,22 @@ AHyperionPlayerController::AHyperionPlayerController()
 	m_ClientSocket = CreateDefaultSubobject<UClientSocket>(TEXT("ClientSocket"));
 }
 
+void AHyperionPlayerController::OnPossess(APawn* aPawn)
+{
+	Super::OnPossess(aPawn);
+
+	if (m_ClientSocket->ActivateThreads())
+		UE_LOG(LogTemp, Error, TEXT("Failed to initialize client socket threads"));
+}
+
+void AHyperionPlayerController::OnUnPossess()
+{
+	Super::OnUnPossess();
+
+	if (m_ClientSocket->DeactivateThreads())
+		UE_LOG(LogTemp, Error, TEXT("Failed to deinitialize client socket threads"));
+}
+
 void AHyperionPlayerController::OnNotify_Implementation(
 	const TArray<bool>& _InHeader,
 	const FVector& _InNewVec,
