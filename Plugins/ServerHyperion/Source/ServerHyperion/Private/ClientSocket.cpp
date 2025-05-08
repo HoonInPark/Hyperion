@@ -14,3 +14,76 @@ UClientSocket::UClientSocket()
 
 	// ...
 }
+
+void UClientSocket::Activate(bool bReset)
+{
+	Super::Activate(bReset);
+
+
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+FClientRunnable_Send::FClientRunnable_Send()
+{
+}
+
+FClientRunnable_Send::~FClientRunnable_Send()
+{
+}
+
+bool FClientRunnable_Send::Init()
+{
+	return false;
+}
+
+uint32 FClientRunnable_Send::Run()
+{
+	while (m_bIsRunning)
+	{
+
+	}
+
+	return uint32();
+}
+
+void FClientRunnable_Send::Stop()
+{
+}
+
+void FClientRunnable_Send::Exit()
+{
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+FClientRunnable_Recv::FClientRunnable_Recv()
+{
+}
+
+FClientRunnable_Recv::~FClientRunnable_Recv()
+{
+}
+
+bool FClientRunnable_Recv::Init()
+{
+	return false;
+}
+
+uint32 FClientRunnable_Recv::Run()
+{
+	while (m_bIsRunning)
+	{
+
+	}
+
+	return uint32();
+}
+
+void FClientRunnable_Recv::Stop()
+{
+}
+
+void FClientRunnable_Recv::Exit()
+{
+}
