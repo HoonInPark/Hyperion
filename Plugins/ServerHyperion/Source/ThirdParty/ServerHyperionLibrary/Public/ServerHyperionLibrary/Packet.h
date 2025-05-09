@@ -16,7 +16,7 @@
 
 using namespace std;
 
-class SERVERHYPERION_API Serializer
+class SERVERHYPERION_API Packet
 {
 	/*
 	* <header structure>
@@ -34,7 +34,7 @@ class SERVERHYPERION_API Serializer
 	*/
 
 public:
-	Serializer(bool _bIsSender);
+	Packet(bool _bIsSender);
 
 	enum class Header : char
 	{

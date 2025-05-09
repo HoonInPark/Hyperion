@@ -8,7 +8,6 @@
 #include "HyperionPlayerController.generated.h"
 
 class UClientSocket;
-
 /**
  * 
  */
@@ -30,5 +29,5 @@ public:
 		bool _bInNewInAir) override;
 
 private:
-	UClientSocket* m_ClientSocket;
+	UClientSocket* m_pClientSocket{ nullptr };
 };

@@ -13,6 +13,7 @@
 #pragma comment(lib, "mswsock.lib")
 
 #include <queue>
+#include "ServerHyperionLibrary/Packet.h"
 
 #include "ClientSocket.generated.h"
 
@@ -54,7 +55,7 @@ private:
 	SOCKET m_Socket_Send{ INVALID_SOCKET };
 	SOCKET m_Socket_Recv{ INVALID_SOCKET };
 
-	queue<stOverlappedEx*> m_SendDataQ;
+	TCircularQueue<Packet> m_SendQ{ TCircularQueue<Packet>(60) };
 
 	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
 	FClientRunnable_Recv* m_pClientRunnable_Recv{ nullptr };
@@ -65,7 +66,7 @@ private:
 class SERVERHYPERION_API FClientRunnable_Send : FRunnable
 {
 public:
-	FClientRunnable_Send(SOCKET _InSocket, queue<stOverlappedEx*>& _InSendDataQ);
+	FClientRunnable_Send(SOCKET _InSocket);
 	~FClientRunnable_Send();
 
 	virtual bool Init() override;
@@ -87,7 +88,7 @@ private:
 	SOCKET m_Socket_Send;
 	HANDLE m_IocpHandle_Send{ INVALID_HANDLE_VALUE };
 
-	queue<stOverlappedEx*>& m_SendDataQ;
+	queue<stOverlappedEx*> m_SendDataQ;
 	FCriticalSection m_CS_Send;
 
 	bool m_bIsRunning{ true };

@@ -4,6 +4,7 @@
 #include "ClientSocket.h"
 
 
+
 // Sets default values for this component's properties
 UClientSocket::UClientSocket()
 {
@@ -16,7 +17,8 @@ UClientSocket::UClientSocket()
 
 int32 UClientSocket::ActivateThreads()
 {
-	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send, m_SendDataQ);
+	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send);
+	
 	//m_pClientRunnable_Recv = new FClientRunnable_Recv();
 
 	if (m_pClientRunnable_Send/* && m_pClientRunnable_Recv*/)
@@ -34,10 +36,11 @@ int32 UClientSocket::DeactivateThreads()
 
 //////////////////////////////////////////////////////////////////////////
 
-FClientRunnable_Send::FClientRunnable_Send(SOCKET _InSocket, queue<stOverlappedEx*>& _InSendDataQ)
+FClientRunnable_Send::FClientRunnable_Send(SOCKET _InSocket)
 	: m_Socket_Send(_InSocket)
-	, m_SendDataQ(_InSendDataQ)
 {
+
+
 	pThread = FRunnableThread::Create(this, TEXT("ClientSendThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
 
