@@ -54,10 +54,10 @@ private:
 	SOCKET m_Socket_Send{ INVALID_SOCKET };
 	SOCKET m_Socket_Recv{ INVALID_SOCKET };
 
+	queue<stOverlappedEx*> m_SendDataQ;
+
 	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
 	FClientRunnable_Recv* m_pClientRunnable_Recv{ nullptr };
-
-	//TCircularQueue<stOverlappedEx*> ;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ private:
 class SERVERHYPERION_API FClientRunnable_Send : FRunnable
 {
 public:
-	FClientRunnable_Send(SOCKET _InSocket);
+	FClientRunnable_Send(SOCKET _InSocket, queue<stOverlappedEx*>& _InSendDataQ);
 	~FClientRunnable_Send();
 
 	virtual bool Init() override;
@@ -86,7 +86,9 @@ private:
 private:
 	SOCKET m_Socket_Send;
 	HANDLE m_IocpHandle_Send{ INVALID_HANDLE_VALUE };
-	queue<stOverlappedEx*> m_SendDataQ;
+
+	queue<stOverlappedEx*>& m_SendDataQ;
+	FCriticalSection m_CS_Send;
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* pThread{ nullptr };

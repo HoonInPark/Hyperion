@@ -16,10 +16,10 @@ UClientSocket::UClientSocket()
 
 int32 UClientSocket::ActivateThreads()
 {
-	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send);
-	m_pClientRunnable_Recv = new FClientRunnable_Recv();
+	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send, m_SendDataQ);
+	//m_pClientRunnable_Recv = new FClientRunnable_Recv();
 
-	if (m_pClientRunnable_Send && m_pClientRunnable_Recv)
+	if (m_pClientRunnable_Send/* && m_pClientRunnable_Recv*/)
 		return 0;
 	else
 		return 1;
@@ -34,8 +34,9 @@ int32 UClientSocket::DeactivateThreads()
 
 //////////////////////////////////////////////////////////////////////////
 
-FClientRunnable_Send::FClientRunnable_Send(SOCKET _InSocket)
+FClientRunnable_Send::FClientRunnable_Send(SOCKET _InSocket, queue<stOverlappedEx*>& _InSendDataQ)
 	: m_Socket_Send(_InSocket)
+	, m_SendDataQ(_InSendDataQ)
 {
 	pThread = FRunnableThread::Create(this, TEXT("ClientSendThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
@@ -87,7 +88,7 @@ uint32 FClientRunnable_Send::Run()
 	{
 		
 
-		FPlatformProcess::Sleep(0.001f);
+		FPlatformProcess::Sleep(0.004f);
 	}
 
 	return 0;
@@ -135,8 +136,8 @@ bool FClientRunnable_Send::Connect()
 {
 	SOCKADDR_IN ServerAddr;
 	ServerAddr.sin_family = AF_INET;
-	ServerAddr.sin_port = htons(6000);
-	ServerAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	ServerAddr.sin_port = htons(11021);
+	ServerAddr.sin_addr.s_addr = inet_addr("61.79.175.133");
 
 	if (SOCKET_ERROR == connect(m_Socket_Send, (SOCKADDR*)&ServerAddr, sizeof(SOCKADDR)))
 	{
@@ -187,7 +188,8 @@ bool FClientRunnable_Send::SendIO()
 
 	if (nRet == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
 	{
-		//printf("[에러] WSASend()함수 실패 : %d\n", WSAGetLastError());
+		UE_LOG(LogTemp, Error, TEXT("Failed to run WSASend() : %d"), WSAGetLastError());
+
 		return false;
 	}
 
@@ -204,6 +206,7 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 	sendOverlappedEx->m_eOperation = IOOperation::SEND;
 
 	//std::lock_guard<std::mutex> guard(mSendLock);
+	m_CS_Send.Lock();
 
 	m_SendDataQ.push(sendOverlappedEx);
 
@@ -211,6 +214,8 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 	{
 		SendIO();
 	}
+
+	m_CS_Send.Unlock();
 
 	return true;
 }
