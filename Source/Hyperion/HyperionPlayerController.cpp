@@ -34,7 +34,7 @@ void AHyperionPlayerController::OnNotify_Implementation(
 	const FRotator& _InNewRot,
 	bool _bInNewInAir)
 {
-	TSharedPtr<Packet> pPackTmp(new Packet(true));
+	TSharedPtr<Packet> pPackTmp(new Packet());
 	pPackTmp->SetSessionIdx(1);
 
 	pPackTmp->SetIsJumping(_bInNewInAir);
