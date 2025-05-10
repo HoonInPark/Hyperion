@@ -22,6 +22,8 @@ using namespace std;
 class FClientRunnable_Send;
 class FClientRunnable_Recv;
 
+typedef /*TCircular*/TQueue<TSharedPtr<Packet>, EQueueMode::Spsc> PackQueue;
+
 enum class IOOperation
 {
 	ACCEPT,
@@ -51,11 +53,13 @@ public:
 	int32 ActivateThreads();
 	int32 DeactivateThreads();
 
+	void EnqueueToSendPackQ(TSharedPtr<Packet> _InPack) { m_SendPackQ.Enqueue(_InPack); }
+
 private:
 	SOCKET m_Socket_Send{ INVALID_SOCKET };
 	SOCKET m_Socket_Recv{ INVALID_SOCKET };
 
-	TCircularQueue<Packet> m_SendQ{ TCircularQueue<Packet>(60) };
+	PackQueue m_SendPackQ/*{ PackQueue(60) }*/;
 
 	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
 	FClientRunnable_Recv* m_pClientRunnable_Recv{ nullptr };
@@ -66,7 +70,7 @@ private:
 class SERVERHYPERION_API FClientRunnable_Send : FRunnable
 {
 public:
-	FClientRunnable_Send(SOCKET _InSocket);
+	FClientRunnable_Send(SOCKET _InSocket, PackQueue& _InSendQ);
 	~FClientRunnable_Send();
 
 	virtual bool Init() override;
@@ -90,6 +94,8 @@ private:
 
 	queue<stOverlappedEx*> m_SendDataQ;
 	FCriticalSection m_CS_Send;
+
+	PackQueue& m_SendPackQ;
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* pThread{ nullptr };

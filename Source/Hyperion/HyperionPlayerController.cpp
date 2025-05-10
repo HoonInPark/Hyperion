@@ -2,8 +2,10 @@
 
 
 #include "HyperionPlayerController.h"
+
 #include "HyperionCharacter.h"
 #include "ServerHyperion/Public/ClientSocket.h" 
+#include "ServerHyperionLibrary/Packet.h"
 
 AHyperionPlayerController::AHyperionPlayerController()
 {
@@ -32,15 +34,29 @@ void AHyperionPlayerController::OnNotify_Implementation(
 	const FRotator& _InNewRot,
 	bool _bInNewInAir)
 {
+	TSharedPtr<Packet> pPackTmp(new Packet(true));
+	pPackTmp->SetSessionIdx(1);
+
+	pPackTmp->SetIsJumping(_bInNewInAir);
 
 	// Handle the notification from the observable
 	if (_InHeader[static_cast<int32>(ECharStatus::E_WASD)] || _bInNewInAir)
 	{
+		pPackTmp->SetPosX(_InNewVec.X);
+		pPackTmp->SetPosY(_InNewVec.Y);
+		pPackTmp->SetPosZ(_InNewVec.Z);
+
 		//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewVec.ToString()));
 	}
 
 	if (_InHeader[static_cast<int32>(ECharStatus::E_MOUSE)])
 	{
+		pPackTmp->SetRotPitch(_InNewRot.Pitch);
+		pPackTmp->SetRotRoll(_InNewRot.Roll);
+		pPackTmp->SetRotYaw(_InNewRot.Yaw);
+
 		//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewRot.ToString()));
 	}
+
+	m_pClientSocket->EnqueueToSendPackQ(pPackTmp);
 }

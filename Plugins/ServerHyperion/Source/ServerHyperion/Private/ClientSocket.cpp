@@ -17,7 +17,7 @@ UClientSocket::UClientSocket()
 
 int32 UClientSocket::ActivateThreads()
 {
-	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send);
+	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send, m_SendPackQ);
 	
 	//m_pClientRunnable_Recv = new FClientRunnable_Recv();
 
@@ -36,11 +36,10 @@ int32 UClientSocket::DeactivateThreads()
 
 //////////////////////////////////////////////////////////////////////////
 
-FClientRunnable_Send::FClientRunnable_Send(SOCKET _InSocket)
+FClientRunnable_Send::FClientRunnable_Send(SOCKET _InSocket, PackQueue& _InSendQ)
 	: m_Socket_Send(_InSocket)
+	, m_SendPackQ(_InSendQ)
 {
-
-
 	pThread = FRunnableThread::Create(this, TEXT("ClientSendThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
 
@@ -87,9 +86,17 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 
 uint32 FClientRunnable_Send::Run()
 {
+	TSharedPtr<Packet> pPackTmp;
+	
+	char* StartPtTmp = nullptr;
+	UINT8 SizeTmp;
+
 	while (m_bIsRunning)
 	{
-		
+		m_SendPackQ.Dequeue(pPackTmp);
+		SizeTmp = pPackTmp->Write(StartPtTmp);
+
+		SendMsg(SizeTmp, StartPtTmp);
 
 		FPlatformProcess::Sleep(0.004f);
 	}
