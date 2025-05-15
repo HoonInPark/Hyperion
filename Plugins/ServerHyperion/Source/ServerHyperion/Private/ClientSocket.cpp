@@ -41,6 +41,7 @@ FClientRunnable_Send::FClientRunnable_Send(SOCKET _InSocket, PackQueue& _InSendQ
 	, m_SendPackQ(_InSendQ)
 {
 	pThread = FRunnableThread::Create(this, TEXT("ClientSendThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
+	auto test = new DynamicObjectPool<Packet>(60);
 }
 
 FClientRunnable_Send::~FClientRunnable_Send()

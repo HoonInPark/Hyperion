@@ -14,6 +14,7 @@
 
 #include <queue>
 #include "ServerHyperionLibrary/Packet.h"
+#include "ServerHyperionLibrary/object_pool.hpp"
 
 #include "ClientSocket.generated.h"
 
