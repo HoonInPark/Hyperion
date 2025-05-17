@@ -13,17 +13,17 @@
 #pragma comment(lib, "mswsock.lib")
 
 #include <queue>
+#include <concurrent_queue.h>
 #include "ServerHyperionLibrary/Packet.h"
-#include "ServerHyperionLibrary/object_pool.hpp"
+#include "ServerHyperionLibrary/ObjPool.h"
 
 #include "ClientSocket.generated.h"
 
 using namespace std;
+using namespace Concurrency;
 
 class FClientRunnable_Send;
 class FClientRunnable_Recv;
-
-typedef /*TCircular*/TQueue<TSharedPtr<Packet>, EQueueMode::Spsc> PackQueue;
 
 enum class IOOperation
 {
@@ -50,17 +50,29 @@ class SERVERHYPERION_API UClientSocket : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UClientSocket();
+	~UClientSocket();
 
 	int32 ActivateThreads();
 	int32 DeactivateThreads();
 
-	void EnqueueToSendPackQ(TSharedPtr<Packet> _InPack) { m_SendPackQ.Enqueue(_InPack); }
+	ObjPool<Packet>* GetPackPool() { return m_pSendPackPool; }
+
+	inline void SendPackQ_Push(shared_ptr<Packet> _pInElem)
+	{
+		m_pSendPackQ->push(_pInElem);
+	}
+
+	inline bool SendPackQ_Pop(shared_ptr<Packet> _pOutElem) 
+	{
+		return m_pSendPackQ->try_pop(_pOutElem);
+	}
 
 private:
+	ObjPool<Packet>* m_pSendPackPool{ nullptr };
+	concurrent_queue <shared_ptr< Packet >> *m_pSendPackQ{ nullptr };
+
 	SOCKET m_Socket_Send{ INVALID_SOCKET };
 	SOCKET m_Socket_Recv{ INVALID_SOCKET };
-
-	PackQueue m_SendPackQ/*{ PackQueue(60) }*/;
 
 	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
 	FClientRunnable_Recv* m_pClientRunnable_Recv{ nullptr };
@@ -71,15 +83,17 @@ private:
 class SERVERHYPERION_API FClientRunnable_Send : FRunnable
 {
 public:
-	FClientRunnable_Send(SOCKET _InSocket, PackQueue& _InSendQ);
+	FClientRunnable_Send(
+		SOCKET _InSocket,
+		ObjPool<Packet>* _pInPool,
+		concurrent_queue <shared_ptr< Packet >>* _pInQ);
+
 	~FClientRunnable_Send();
 
 	virtual bool Init() override;
 	virtual uint32 Run() override;
 	virtual void Stop() override;
 	virtual void Exit() override;
-
-	inline SOCKET GetSock() { return m_Socket_Send; }
 
 private:
 	bool InitSock();
@@ -94,9 +108,11 @@ private:
 	HANDLE m_IocpHandle_Send{ INVALID_HANDLE_VALUE };
 
 	queue<stOverlappedEx*> m_SendDataQ;
-	FCriticalSection m_CS_Send;
 
-	PackQueue& m_SendPackQ;
+	ObjPool<Packet>* m_pPackPool{ nullptr };
+	concurrent_queue <shared_ptr< Packet >>* m_pPackQ{ nullptr };
+
+	FCriticalSection CS;
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* pThread{ nullptr };
@@ -117,6 +133,9 @@ public:
 	virtual void Exit() override;
 
 private:
+	//DynamicObjectPool<Packet>* m_pDymPackPool{ nullptr };
+	queue<Packet*>* m_pPackQ{ nullptr };
+
 	bool m_bIsRunning{ true };
 	FRunnableThread* pThread{ nullptr };
 

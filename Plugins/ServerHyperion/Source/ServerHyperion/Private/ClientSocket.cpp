@@ -12,13 +12,19 @@ UClientSocket::UClientSocket()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	// ...
+}
+
+UClientSocket::~UClientSocket()
+{
 }
 
 int32 UClientSocket::ActivateThreads()
 {
-	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send, m_SendPackQ);
-	
+	m_pSendPackPool = new ObjPool<Packet>(60);
+	m_pSendPackQ = new concurrent_queue <shared_ptr< Packet >>();
+
+	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send, m_pSendPackPool, m_pSendPackQ);
+
 	//m_pClientRunnable_Recv = new FClientRunnable_Recv();
 
 	if (m_pClientRunnable_Send/* && m_pClientRunnable_Recv*/)
@@ -31,17 +37,23 @@ int32 UClientSocket::DeactivateThreads()
 {
 	m_pClientRunnable_Send->Stop();
 
+	delete m_pSendPackQ;
+	delete m_pSendPackPool;
+
 	return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
 
-FClientRunnable_Send::FClientRunnable_Send(SOCKET _InSocket, PackQueue& _InSendQ)
+FClientRunnable_Send::FClientRunnable_Send(
+	SOCKET _InSocket,
+	ObjPool<Packet>* _pInPool,
+	concurrent_queue <shared_ptr< Packet >>* _pInQ)
 	: m_Socket_Send(_InSocket)
-	, m_SendPackQ(_InSendQ)
+	, m_pPackPool(_pInPool)
+	, m_pPackQ(_pInQ)
 {
 	pThread = FRunnableThread::Create(this, TEXT("ClientSendThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
-	auto test = new DynamicObjectPool<Packet>(60);
 }
 
 FClientRunnable_Send::~FClientRunnable_Send()
@@ -73,7 +85,7 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to create iocp handle : %d"), GetLastError());
 
-		closesocket(GetSock());
+		closesocket(m_Socket_Send);
 		WSACleanup();
 
 		return false;
@@ -87,19 +99,24 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 
 uint32 FClientRunnable_Send::Run()
 {
-	TSharedPtr<Packet> pPackTmp;
-	
-	char* StartPtTmp = nullptr;
-	UINT8 SizeTmp;
+	shared_ptr<Packet> pPack = nullptr;
+
+	char* pStart = nullptr;
+	UINT8 Size;
 
 	while (m_bIsRunning)
 	{
-		m_SendPackQ.Dequeue(pPackTmp);
-		SizeTmp = pPackTmp->Write(StartPtTmp);
-
-		SendMsg(SizeTmp, StartPtTmp);
-
-		FPlatformProcess::Sleep(0.004f);
+		if (m_pPackQ->try_pop(pPack))
+		{
+			Size = pPack->Write(pStart);
+			SendMsg(Size, pStart);
+			m_pPackPool->Return(pPack);
+		}
+		else
+		{
+			FPlatformProcess::Sleep(0.001f);
+			continue;
+		}
 	}
 
 	return 0;
@@ -116,7 +133,7 @@ void FClientRunnable_Send::Exit() // called when func Run() is returned
 
 	delete pThread;
 	pThread = nullptr;
-	
+
 	delete this;
 }
 
@@ -148,13 +165,13 @@ bool FClientRunnable_Send::Connect()
 	SOCKADDR_IN ServerAddr;
 	ServerAddr.sin_family = AF_INET;
 	ServerAddr.sin_port = htons(11021);
-	ServerAddr.sin_addr.s_addr = inet_addr("61.79.175.133");
+	ServerAddr.sin_addr.s_addr = inet_addr("115.23.150.83");
 
 	if (SOCKET_ERROR == connect(m_Socket_Send, (SOCKADDR*)&ServerAddr, sizeof(SOCKADDR)))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to connect : %d"), WSAGetLastError());
 
-		closesocket(GetSock());
+		closesocket(m_Socket_Send);
 		WSACleanup();
 
 		return false;
@@ -166,8 +183,8 @@ bool FClientRunnable_Send::Connect()
 bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 {
 	auto hIOCP = CreateIoCompletionPort(
-		(HANDLE)GetSock(), 
-		_InIocpHandle, 
+		(HANDLE)m_Socket_Send,
+		_InIocpHandle,
 		(ULONG_PTR)(this), 0);
 
 	if (hIOCP == INVALID_HANDLE_VALUE)
@@ -175,7 +192,7 @@ bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 		UE_LOG(LogTemp, Error, TEXT("Failed to run CreateIoCompletionPort() : %d"), GetLastError());
 
 		CloseHandle(_InIocpHandle);
-		closesocket(GetSock());
+		closesocket(m_Socket_Send);
 		WSACleanup();
 
 		return false;
@@ -217,7 +234,7 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 	sendOverlappedEx->m_eOperation = IOOperation::SEND;
 
 	//std::lock_guard<std::mutex> guard(mSendLock);
-	m_CS_Send.Lock();
+	CS.Lock();
 
 	m_SendDataQ.push(sendOverlappedEx);
 
@@ -226,7 +243,7 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 		SendIO();
 	}
 
-	m_CS_Send.Unlock();
+	CS.Unlock();
 
 	return true;
 }

@@ -34,9 +34,13 @@ void AHyperionPlayerController::OnNotify_Implementation(
 	const FRotator& _InNewRot,
 	bool _bInNewInAir)
 {
-	TSharedPtr<Packet> pPackTmp(new Packet());
-	pPackTmp->SetSessionIdx(1);
+	shared_ptr<Packet> pPackTmp = nullptr;
+	if (m_pClientSocket->GetPackPool()->Acquire(pPackTmp))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
+	}
 
+	pPackTmp->SetSessionIdx(1);
 	pPackTmp->SetIsJumping(_bInNewInAir);
 
 	// Handle the notification from the observable
@@ -46,7 +50,7 @@ void AHyperionPlayerController::OnNotify_Implementation(
 		pPackTmp->SetPosY(_InNewVec.Y);
 		pPackTmp->SetPosZ(_InNewVec.Z);
 
-		//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewVec.ToString()));
+		UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewVec.ToString()));
 	}
 
 	if (_InHeader[static_cast<int32>(ECharStatus::E_MOUSE)])
@@ -55,8 +59,8 @@ void AHyperionPlayerController::OnNotify_Implementation(
 		pPackTmp->SetRotRoll(_InNewRot.Roll);
 		pPackTmp->SetRotYaw(_InNewRot.Yaw);
 
-		//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewRot.ToString()));
+		UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewRot.ToString()));
 	}
 
-	m_pClientSocket->EnqueueToSendPackQ(pPackTmp);
+	m_pClientSocket->SendPackQ_Push(pPackTmp);
 }
