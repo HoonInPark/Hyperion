@@ -38,6 +38,7 @@ void AHyperionPlayerController::OnNotify_Implementation(
 	if (m_pClientSocket->GetPackPool()->Acquire(pPackTmp))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
+		return;
 	}
 
 	pPackTmp->SetSessionIdx(1);
