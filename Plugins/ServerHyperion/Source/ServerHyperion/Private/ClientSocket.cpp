@@ -20,6 +20,7 @@ UClientSocket::~UClientSocket()
 
 int32 UClientSocket::ActivateThreads()
 {
+	m_SendPackPool = ObjPool<Packet>(60);
 	m_pClientRunnable_Send = new FClientRunnable_Send(this, m_SendDataQ);
 
 	if (m_pClientRunnable_Send)
@@ -31,7 +32,7 @@ int32 UClientSocket::ActivateThreads()
 int32 UClientSocket::DeactivateThreads()
 {
 	m_pClientRunnable_Send->Stop();
-
+	
 	return 0;
 }
 
@@ -67,13 +68,15 @@ FClientRunnable_Send::FClientRunnable_Send(
 	: m_pClientSock(_pInClientSock)
 	, m_SendDataQ(_InSendDataQ)
 {
-	m_pClientRunnable_IO = new FClientRunnable_IO();
+	m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_SendDataQ);
 
 	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_Send"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
 
 FClientRunnable_Send::~FClientRunnable_Send()
 {
+	delete m_pThread;
+	m_pThread = nullptr;
 }
 
 bool FClientRunnable_Send::Init() // func Init also called in outside of thread. u can check it while in debugging session.
@@ -157,9 +160,6 @@ void FClientRunnable_Send::Stop() //
 void FClientRunnable_Send::Exit() // called when func Run() is returned
 {
 	m_pThread->WaitForCompletion();
-
-	delete m_pThread;
-	m_pThread = nullptr;
 
 	delete this;
 }
@@ -264,6 +264,8 @@ FClientRunnable_IO::FClientRunnable_IO(
 
 FClientRunnable_IO::~FClientRunnable_IO()
 {
+	delete m_pThread;
+	m_pThread = nullptr;
 }
 
 bool FClientRunnable_IO::Init()
@@ -283,14 +285,12 @@ uint32 FClientRunnable_IO::Run()
 
 void FClientRunnable_IO::Stop()
 {
+	m_bIsRunning = false;
 }
 
 void FClientRunnable_IO::Exit()
 {
 	m_pThread->WaitForCompletion();
-
-	delete m_pThread;
-	m_pThread = nullptr;
 
 	delete this;
 }

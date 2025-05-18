@@ -17,6 +17,8 @@ template <typename T>
 class SERVERHYPERION_API ObjPool
 {
 public:
+	ObjPool() = default;
+
 	template <class... P>
 	ObjPool(size_t _InInitSize, P&&... params);
 
@@ -40,7 +42,7 @@ inline ObjPool<T>::ObjPool(size_t _InInitSize, P&&... params)
 template<typename T>
 inline bool ObjPool<T>::Acquire(shared_ptr<T>& _pOutElem)
 {
-	if (_pOutElem = m_Data.front());
+	if (_pOutElem = m_Data.front())
 	{
 		m_Data.pop();
 		return true;

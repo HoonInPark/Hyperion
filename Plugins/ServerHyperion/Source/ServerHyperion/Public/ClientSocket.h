@@ -79,7 +79,7 @@ public:
 private:
 	queue<stOverlappedEx*> m_SendDataQ;
 
-	ObjPool<Packet> m_SendPackPool{ ObjPool<Packet>(60) };
+	ObjPool<Packet> m_SendPackPool;
 	queue <shared_ptr< Packet >> m_SendPackQ;
 
 	SOCKET m_Sock{ INVALID_SOCKET };
