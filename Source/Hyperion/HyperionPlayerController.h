@@ -29,7 +29,7 @@ public:
 		bool _bInNewInAir) override;
 
 private:
-	UClientSocket* m_pClientSocket{ nullptr };
+	UClientSocket* m_pClientSock{ nullptr };
 
 	FCriticalSection m_CS;
 };

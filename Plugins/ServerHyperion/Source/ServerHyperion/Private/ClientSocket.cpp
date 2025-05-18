@@ -20,14 +20,9 @@ UClientSocket::~UClientSocket()
 
 int32 UClientSocket::ActivateThreads()
 {
-	m_pSendPackPool = new ObjPool<Packet>(60);
-	m_pSendPackQ = new queue <shared_ptr< Packet >>();
+	m_pClientRunnable_Send = new FClientRunnable_Send(this, m_SendDataQ);
 
-	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send, m_pSendPackPool, m_pSendPackQ);
-
-	//m_pClientRunnable_Recv = new FClientRunnable_Recv();
-
-	if (m_pClientRunnable_Send/* && m_pClientRunnable_Recv*/)
+	if (m_pClientRunnable_Send)
 		return 0;
 	else
 		return 1;
@@ -37,23 +32,44 @@ int32 UClientSocket::DeactivateThreads()
 {
 	m_pClientRunnable_Send->Stop();
 
-	delete m_pSendPackQ;
-	delete m_pSendPackPool;
-
 	return 0;
+}
+
+bool UClientSocket::SendIO()
+{
+	auto sendOverlappedEx = m_SendDataQ.front();
+
+	DWORD dwRecvNumBytes = 0;
+	int nRet = WSASend(
+		GetSock(),
+		&(sendOverlappedEx->m_wsaBuf),
+		1,
+		&dwRecvNumBytes,
+		0,
+		(LPWSAOVERLAPPED)sendOverlappedEx,
+		NULL);
+
+	if (nRet == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to run WSASend() : %d"), WSAGetLastError());
+
+		return false;
+	}
+
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
 
 FClientRunnable_Send::FClientRunnable_Send(
-	SOCKET _InSocket,
-	ObjPool<Packet>* _pInPool,
-	queue <shared_ptr< Packet >>* _pInQ)
-	: m_Socket_Send(_InSocket)
-	, m_pPackPool(_pInPool)
-	, m_pPackQ(_pInQ)
+	UClientSocket* _pInClientSock,
+	queue<stOverlappedEx*>& _InSendDataQ)
+	: m_pClientSock(_pInClientSock)
+	, m_SendDataQ(_InSendDataQ)
 {
-	pThread = FRunnableThread::Create(this, TEXT("ClientSendThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
+	m_pClientRunnable_IO = new FClientRunnable_IO();
+
+	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_Send"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
 
 FClientRunnable_Send::~FClientRunnable_Send()
@@ -80,18 +96,18 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 		return false;
 
 	// create iocp handle 
-	m_IocpHandle_Send = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-	if (NULL == m_IocpHandle_Send)
+	m_IocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+	if (NULL == m_IocpHandle)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to create iocp handle : %d"), GetLastError());
 
-		closesocket(m_Socket_Send);
+		closesocket(m_pClientSock->GetSock());
 		WSACleanup();
 
 		return false;
 	}
 
-	if (!BindIOCompletionPort(m_IocpHandle_Send))
+	if (!BindIOCompletionPort(m_IocpHandle))
 		return false;
 
 	return true;
@@ -106,17 +122,19 @@ uint32 FClientRunnable_Send::Run()
 
 	while (m_bIsRunning)
 	{
+		auto SendPackQ = m_pClientSock->GetSendPackQ();
+
 		m_CS.Lock();
 
-		if (!m_pPackQ->empty())
+		if (!SendPackQ.empty())
 		{
-			pPack = m_pPackQ->front();
+			pPack = SendPackQ.front();
 
 			Size = pPack->Write(pStart);
 			SendMsg(Size, pStart);
-			m_pPackPool->Return(pPack);
+			m_pClientSock->GetSendPackPool().Return(pPack);
 
-			m_pPackQ->pop();
+			SendPackQ.pop();
 			
 			m_CS.Unlock();
 		}
@@ -138,10 +156,10 @@ void FClientRunnable_Send::Stop() //
 
 void FClientRunnable_Send::Exit() // called when func Run() is returned
 {
-	pThread->WaitForCompletion();
+	m_pThread->WaitForCompletion();
 
-	delete pThread;
-	pThread = nullptr;
+	delete m_pThread;
+	m_pThread = nullptr;
 
 	delete this;
 }
@@ -149,7 +167,7 @@ void FClientRunnable_Send::Exit() // called when func Run() is returned
 bool FClientRunnable_Send::InitSock()
 {
 	// socket initialize
-	m_Socket_Send = WSASocket(
+	m_pClientSock->GetSock() = WSASocket(
 		AF_INET,
 		SOCK_STREAM,
 		IPPROTO_TCP,
@@ -157,7 +175,7 @@ bool FClientRunnable_Send::InitSock()
 		NULL,
 		WSA_FLAG_OVERLAPPED);
 
-	if (m_Socket_Send == INVALID_SOCKET)
+	if (m_pClientSock->GetSock() == INVALID_SOCKET)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to initialize client socket object"));
 
@@ -176,11 +194,11 @@ bool FClientRunnable_Send::Connect()
 	ServerAddr.sin_port = htons(11021);
 	ServerAddr.sin_addr.s_addr = inet_addr("115.23.150.83");
 
-	if (SOCKET_ERROR == connect(m_Socket_Send, (SOCKADDR*)&ServerAddr, sizeof(SOCKADDR)))
+	if (SOCKET_ERROR == connect(m_pClientSock->GetSock(), (SOCKADDR*)&ServerAddr, sizeof(SOCKADDR)))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to connect : %d"), WSAGetLastError());
 
-		closesocket(m_Socket_Send);
+		closesocket(m_pClientSock->GetSock());
 		WSACleanup();
 
 		return false;
@@ -192,7 +210,7 @@ bool FClientRunnable_Send::Connect()
 bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 {
 	auto hIOCP = CreateIoCompletionPort(
-		(HANDLE)m_Socket_Send,
+		(HANDLE)m_pClientSock->GetSock(),
 		_InIocpHandle,
 		(ULONG_PTR)(this), 0);
 
@@ -201,31 +219,8 @@ bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 		UE_LOG(LogTemp, Error, TEXT("Failed to run CreateIoCompletionPort() : %d"), GetLastError());
 
 		CloseHandle(_InIocpHandle);
-		closesocket(m_Socket_Send);
+		closesocket(m_pClientSock->GetSock());
 		WSACleanup();
-
-		return false;
-	}
-
-	return true;
-}
-
-bool FClientRunnable_Send::SendIO()
-{
-	auto sendOverlappedEx = m_SendDataQ.front();
-
-	DWORD dwRecvNumBytes = 0;
-	int nRet = WSASend(m_Socket_Send,
-		&(sendOverlappedEx->m_wsaBuf),
-		1,
-		&dwRecvNumBytes,
-		0,
-		(LPWSAOVERLAPPED)sendOverlappedEx,
-		NULL);
-
-	if (nRet == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to run WSASend() : %d"), WSAGetLastError());
 
 		return false;
 	}
@@ -242,14 +237,13 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 	CopyMemory(sendOverlappedEx->m_wsaBuf.buf, _pInMsg, _InSize);
 	sendOverlappedEx->m_eOperation = IOOperation::SEND;
 
-	//std::lock_guard<std::mutex> guard(mSendLock);
 	m_CS.Lock();
 
 	m_SendDataQ.push(sendOverlappedEx);
 
 	if (m_SendDataQ.size() == 1)
 	{
-		SendIO();
+		m_pClientSock->SendIO();
 	}
 
 	m_CS.Unlock();
@@ -257,9 +251,53 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 	return true;
 }
 
-void FClientRunnable_Send::SendCompleted(const UINT32 _InDataSize)
+//////////////////////////////////////////////////////////////////////////
+
+FClientRunnable_IO::FClientRunnable_IO(
+	UClientSocket* _pInClientSock,
+	queue<stOverlappedEx*>& _InSendDataQ)
+	: m_pClientSock(_pInClientSock)
+	, m_SendDataQ(_InSendDataQ)
 {
-	printf("[송신 완료] bytes : %d\n", _InDataSize);
+	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_IO"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
+}
+
+FClientRunnable_IO::~FClientRunnable_IO()
+{
+}
+
+bool FClientRunnable_IO::Init()
+{
+	return false;
+}
+
+uint32 FClientRunnable_IO::Run()
+{
+	while (m_bIsRunning)
+	{
+
+	}
+
+	return uint32();
+}
+
+void FClientRunnable_IO::Stop()
+{
+}
+
+void FClientRunnable_IO::Exit()
+{
+	m_pThread->WaitForCompletion();
+
+	delete m_pThread;
+	m_pThread = nullptr;
+
+	delete this;
+}
+
+void FClientRunnable_IO::SendCompleted(const UINT32 _InDataSize)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Send Complete Data Size : %d"), _InDataSize);
 
 	m_CS.Lock();
 
@@ -270,42 +308,9 @@ void FClientRunnable_Send::SendCompleted(const UINT32 _InDataSize)
 
 	if (m_SendDataQ.empty() == false)
 	{
-		SendIO();
+		m_pClientSock->SendIO();
 	}
 
 	m_CS.Unlock();
 }
 
-//////////////////////////////////////////////////////////////////////////
-
-FClientRunnable_Recv::FClientRunnable_Recv()
-{
-	pThread = FRunnableThread::Create(this, TEXT("ClientRecvThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
-}
-
-FClientRunnable_Recv::~FClientRunnable_Recv()
-{
-}
-
-bool FClientRunnable_Recv::Init()
-{
-	return false;
-}
-
-uint32 FClientRunnable_Recv::Run()
-{
-	while (m_bIsRunning)
-	{
-
-	}
-
-	return uint32();
-}
-
-void FClientRunnable_Recv::Stop()
-{
-}
-
-void FClientRunnable_Recv::Exit()
-{
-}

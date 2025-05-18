@@ -21,7 +21,7 @@
 using namespace std;
 
 class FClientRunnable_Send;
-class FClientRunnable_Recv;
+class FClientRunnable_IO;
 
 enum class IOOperation
 {
@@ -53,33 +53,38 @@ public:
 	int32 ActivateThreads();
 	int32 DeactivateThreads();
 
-	ObjPool<Packet>* GetPackPool() { return m_pSendPackPool; }
-
 	inline void SendPackQ_Push(shared_ptr<Packet> _pInElem)
 	{
-		m_pSendPackQ->push(_pInElem);
+		m_SendPackQ.push(_pInElem);
 	}
 
 	inline bool SendPackQ_Pop(shared_ptr<Packet>& _pOutElem) 
 	{
-		if (_pOutElem = m_pSendPackQ->front())
+		if (_pOutElem = m_SendPackQ.front())
 		{
-			m_pSendPackQ->pop();
+			m_SendPackQ.pop();
 			return true;
 		}
 
 		return false;
 	}
 
-private:
-	ObjPool<Packet>* m_pSendPackPool{ nullptr };
-	queue <shared_ptr< Packet >> *m_pSendPackQ{ nullptr };
+	FORCEINLINE ObjPool<Packet>& GetSendPackPool() { return m_SendPackPool; }
+	FORCEINLINE queue <shared_ptr< Packet >>& GetSendPackQ() { return m_SendPackQ; }
 
-	SOCKET m_Socket_Send{ INVALID_SOCKET };
-	SOCKET m_Socket_Recv{ INVALID_SOCKET };
+	FORCEINLINE SOCKET& GetSock() { return m_Sock; }
+
+	bool SendIO();
+
+private:
+	queue<stOverlappedEx*> m_SendDataQ;
+
+	ObjPool<Packet> m_SendPackPool{ ObjPool<Packet>(60) };
+	queue <shared_ptr< Packet >> m_SendPackQ;
+
+	SOCKET m_Sock{ INVALID_SOCKET };
 
 	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
-	FClientRunnable_Recv* m_pClientRunnable_Recv{ nullptr };
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -88,10 +93,8 @@ class SERVERHYPERION_API FClientRunnable_Send : FRunnable
 {
 public:
 	FClientRunnable_Send(
-		SOCKET _InSocket,
-		ObjPool<Packet>* _pInPool,
-		queue <shared_ptr< Packet >>* _pInQ);
-
+		UClientSocket* _pInClientSock, 
+		queue<stOverlappedEx*>& _InSendDataQ);
 	~FClientRunnable_Send();
 
 	virtual bool Init() override;
@@ -103,34 +106,32 @@ private:
 	bool InitSock();
 	bool Connect();
 	bool BindIOCompletionPort(HANDLE _InIocpHandle);
-	
-	bool SendIO();
+
 	bool SendMsg(const UINT32 _InSize, char* _pInMsg);
-	void SendCompleted(const UINT32 _InDataSize);
 
 private:
-	SOCKET m_Socket_Send;
-	HANDLE m_IocpHandle_Send{ INVALID_HANDLE_VALUE };
+	UClientSocket* m_pClientSock;
+	queue<stOverlappedEx*>& m_SendDataQ;
 
-	queue<stOverlappedEx*> m_SendDataQ;
-
-	ObjPool<Packet>* m_pPackPool{ nullptr };
-	queue <shared_ptr< Packet >>* m_pPackQ{ nullptr };
+	HANDLE m_IocpHandle{ INVALID_HANDLE_VALUE };
 
 	FCriticalSection m_CS;
 
 	bool m_bIsRunning{ true };
-	FRunnableThread* pThread{ nullptr };
+	FRunnableThread* m_pThread{ nullptr };
 
+	FClientRunnable_IO* m_pClientRunnable_IO{ nullptr };
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-class SERVERHYPERION_API FClientRunnable_Recv : FRunnable
+class SERVERHYPERION_API FClientRunnable_IO : FRunnable
 {
 public:
-	FClientRunnable_Recv();
-	~FClientRunnable_Recv();
+	FClientRunnable_IO(
+		UClientSocket* _pInClientSock,
+		queue<stOverlappedEx*>& _InSendDataQ);
+	~FClientRunnable_IO();
 
 	virtual bool Init() override;
 	virtual uint32 Run() override;
@@ -138,10 +139,15 @@ public:
 	virtual void Exit() override;
 
 private:
-	//DynamicObjectPool<Packet>* m_pDymPackPool{ nullptr };
-	queue<Packet*>* m_pPackQ{ nullptr };
+	void SendCompleted(const UINT32 _InDataSize);
+
+private:
+	UClientSocket* m_pClientSock;
+	queue<stOverlappedEx*>& m_SendDataQ;
+
+	FCriticalSection m_CS;
 
 	bool m_bIsRunning{ true };
-	FRunnableThread* pThread{ nullptr };
+	FRunnableThread* m_pThread{ nullptr };
 
 };

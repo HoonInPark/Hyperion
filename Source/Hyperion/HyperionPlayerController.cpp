@@ -9,14 +9,14 @@
 
 AHyperionPlayerController::AHyperionPlayerController()
 {
-	m_pClientSocket = CreateDefaultSubobject<UClientSocket>(TEXT("ClientSocket"));
+	m_pClientSock = CreateDefaultSubobject<UClientSocket>(TEXT("ClientSocket"));
 }
 
 void AHyperionPlayerController::OnPossess(APawn* aPawn)
 {
 	Super::OnPossess(aPawn);
 
-	if (m_pClientSocket->ActivateThreads())
+	if (m_pClientSock->ActivateThreads())
 		UE_LOG(LogTemp, Error, TEXT("Failed to initialize client socket threads"));
 }
 
@@ -24,7 +24,7 @@ void AHyperionPlayerController::OnUnPossess()
 {
 	Super::OnUnPossess();
 
-	if (m_pClientSocket->DeactivateThreads())
+	if (m_pClientSock->DeactivateThreads())
 		UE_LOG(LogTemp, Error, TEXT("Failed to deinitialize client socket threads"));
 }
 
@@ -34,11 +34,11 @@ void AHyperionPlayerController::OnNotify_Implementation(
 	const FRotator& _InNewRot,
 	bool _bInNewInAir)
 {
-	shared_ptr<Packet> pPackTmp = nullptr;
+	shared_ptr<Packet> pPack = nullptr;
 
 	m_CS.Lock();
 	
-	if (!m_pClientSocket->GetPackPool()->Acquire(pPackTmp))
+	if (!m_pClientSock->GetSendPackPool().Acquire(pPack))
 	{
 		m_CS.Unlock();
 		UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
@@ -47,29 +47,29 @@ void AHyperionPlayerController::OnNotify_Implementation(
 
 	m_CS.Unlock();
 
-	pPackTmp->SetSessionIdx(2);
-	pPackTmp->SetIsJumping(_bInNewInAir);
+	pPack->SetSessionIdx(2);
+	pPack->SetIsJumping(_bInNewInAir);
 
 	// Handle the notification from the observable
 	if (_InHeader[static_cast<int32>(ECharStatus::E_WASD)] || _bInNewInAir)
 	{
-		pPackTmp->SetPosX(_InNewVec.X);
-		pPackTmp->SetPosY(_InNewVec.Y);
-		pPackTmp->SetPosZ(_InNewVec.Z);
+		pPack->SetPosX(_InNewVec.X);
+		pPack->SetPosY(_InNewVec.Y);
+		pPack->SetPosZ(_InNewVec.Z);
 
 		UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewVec.ToString()));
 	}
 
 	if (_InHeader[static_cast<int32>(ECharStatus::E_MOUSE)])
 	{
-		pPackTmp->SetRotPitch(_InNewRot.Pitch);
-		pPackTmp->SetRotRoll(_InNewRot.Roll);
-		pPackTmp->SetRotYaw(_InNewRot.Yaw);
+		pPack->SetRotPitch(_InNewRot.Pitch);
+		pPack->SetRotRoll(_InNewRot.Roll);
+		pPack->SetRotYaw(_InNewRot.Yaw);
 
 		UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewRot.ToString()));
 	}
 
 	m_CS.Lock();
-	m_pClientSocket->SendPackQ_Push(pPackTmp);
+	m_pClientSock->SendPackQ_Push(pPack);
 	m_CS.Unlock();
 }
