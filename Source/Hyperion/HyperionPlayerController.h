@@ -30,4 +30,6 @@ public:
 
 private:
 	UClientSocket* m_pClientSocket{ nullptr };
+
+	FCriticalSection m_CS;
 };

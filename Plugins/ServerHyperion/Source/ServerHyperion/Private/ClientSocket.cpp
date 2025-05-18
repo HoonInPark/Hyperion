@@ -21,7 +21,7 @@ UClientSocket::~UClientSocket()
 int32 UClientSocket::ActivateThreads()
 {
 	m_pSendPackPool = new ObjPool<Packet>(60);
-	m_pSendPackQ = new concurrent_queue <shared_ptr< Packet >>();
+	m_pSendPackQ = new queue <shared_ptr< Packet >>();
 
 	m_pClientRunnable_Send = new FClientRunnable_Send(m_Socket_Send, m_pSendPackPool, m_pSendPackQ);
 
@@ -48,7 +48,7 @@ int32 UClientSocket::DeactivateThreads()
 FClientRunnable_Send::FClientRunnable_Send(
 	SOCKET _InSocket,
 	ObjPool<Packet>* _pInPool,
-	concurrent_queue <shared_ptr< Packet >>* _pInQ)
+	queue <shared_ptr< Packet >>* _pInQ)
 	: m_Socket_Send(_InSocket)
 	, m_pPackPool(_pInPool)
 	, m_pPackQ(_pInQ)
@@ -106,14 +106,23 @@ uint32 FClientRunnable_Send::Run()
 
 	while (m_bIsRunning)
 	{
-		if (m_pPackQ->try_pop(pPack))
+		m_CS.Lock();
+
+		if (!m_pPackQ->empty())
 		{
+			pPack = m_pPackQ->front();
+
 			Size = pPack->Write(pStart);
 			SendMsg(Size, pStart);
 			m_pPackPool->Return(pPack);
+
+			m_pPackQ->pop();
+			
+			m_CS.Unlock();
 		}
 		else
 		{
+			m_CS.Unlock();
 			FPlatformProcess::Sleep(0.001f);
 			continue;
 		}
@@ -234,7 +243,7 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 	sendOverlappedEx->m_eOperation = IOOperation::SEND;
 
 	//std::lock_guard<std::mutex> guard(mSendLock);
-	CS.Lock();
+	m_CS.Lock();
 
 	m_SendDataQ.push(sendOverlappedEx);
 
@@ -243,9 +252,28 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 		SendIO();
 	}
 
-	CS.Unlock();
+	m_CS.Unlock();
 
 	return true;
+}
+
+void FClientRunnable_Send::SendCompleted(const UINT32 _InDataSize)
+{
+	printf("[송신 완료] bytes : %d\n", _InDataSize);
+
+	m_CS.Lock();
+
+	delete[] m_SendDataQ.front()->m_wsaBuf.buf;
+	delete m_SendDataQ.front();
+
+	m_SendDataQ.pop();
+
+	if (m_SendDataQ.empty() == false)
+	{
+		SendIO();
+	}
+
+	m_CS.Unlock();
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -107,6 +107,7 @@ void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	m_TimeSinceLastUpdate += DeltaTime;
 	if (m_TimeSinceLastUpdate < 0.2f) return;
 
 	m_pObservable->UpdateData(

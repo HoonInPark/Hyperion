@@ -13,14 +13,12 @@
 #pragma comment(lib, "mswsock.lib")
 
 #include <queue>
-#include <concurrent_queue.h>
 #include "ServerHyperionLibrary/Packet.h"
 #include "ServerHyperionLibrary/ObjPool.h"
 
 #include "ClientSocket.generated.h"
 
 using namespace std;
-using namespace Concurrency;
 
 class FClientRunnable_Send;
 class FClientRunnable_Recv;
@@ -62,14 +60,20 @@ public:
 		m_pSendPackQ->push(_pInElem);
 	}
 
-	inline bool SendPackQ_Pop(shared_ptr<Packet> _pOutElem) 
+	inline bool SendPackQ_Pop(shared_ptr<Packet>& _pOutElem) 
 	{
-		return m_pSendPackQ->try_pop(_pOutElem);
+		if (_pOutElem = m_pSendPackQ->front())
+		{
+			m_pSendPackQ->pop();
+			return true;
+		}
+
+		return false;
 	}
 
 private:
 	ObjPool<Packet>* m_pSendPackPool{ nullptr };
-	concurrent_queue <shared_ptr< Packet >> *m_pSendPackQ{ nullptr };
+	queue <shared_ptr< Packet >> *m_pSendPackQ{ nullptr };
 
 	SOCKET m_Socket_Send{ INVALID_SOCKET };
 	SOCKET m_Socket_Recv{ INVALID_SOCKET };
@@ -86,7 +90,7 @@ public:
 	FClientRunnable_Send(
 		SOCKET _InSocket,
 		ObjPool<Packet>* _pInPool,
-		concurrent_queue <shared_ptr< Packet >>* _pInQ);
+		queue <shared_ptr< Packet >>* _pInQ);
 
 	~FClientRunnable_Send();
 
@@ -102,6 +106,7 @@ private:
 	
 	bool SendIO();
 	bool SendMsg(const UINT32 _InSize, char* _pInMsg);
+	void SendCompleted(const UINT32 _InDataSize);
 
 private:
 	SOCKET m_Socket_Send;
@@ -110,9 +115,9 @@ private:
 	queue<stOverlappedEx*> m_SendDataQ;
 
 	ObjPool<Packet>* m_pPackPool{ nullptr };
-	concurrent_queue <shared_ptr< Packet >>* m_pPackQ{ nullptr };
+	queue <shared_ptr< Packet >>* m_pPackQ{ nullptr };
 
-	FCriticalSection CS;
+	FCriticalSection m_CS;
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* pThread{ nullptr };
