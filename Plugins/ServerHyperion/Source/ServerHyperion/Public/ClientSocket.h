@@ -99,7 +99,8 @@ public:
 	virtual bool Init() override;
 	virtual uint32 Run() override;
 	virtual void Stop() override;
-	virtual void Exit() override;
+
+	FORCEINLINE void WaitForCompletion() { m_pThread->WaitForCompletion(); }
 
 private:
 	bool InitSock();

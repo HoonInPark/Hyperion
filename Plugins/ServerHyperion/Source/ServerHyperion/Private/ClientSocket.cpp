@@ -3,8 +3,6 @@
 
 #include "ClientSocket.h"
 
-
-
 // Sets default values for this component's properties
 UClientSocket::UClientSocket()
 {
@@ -29,6 +27,9 @@ int32 UClientSocket::ActivateThreads()
 int32 UClientSocket::DeactivateThreads()
 {
 	m_pClientRunnable_Send->Stop();
+	m_pClientRunnable_Send->WaitForCompletion();
+
+	delete m_pClientRunnable_Send;
 
 	return 0;
 }
@@ -72,6 +73,8 @@ FClientRunnable_Send::FClientRunnable_Send(
 
 FClientRunnable_Send::~FClientRunnable_Send()
 {
+	if (!m_pThread) return;
+
 	delete m_pThread;
 	m_pThread = nullptr;
 }
@@ -116,17 +119,15 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 uint32 FClientRunnable_Send::Run()
 {
 	shared_ptr<Packet> pPack = nullptr;
-
 	char* pStart = nullptr;
 	UINT8 Size;
 
 	while (m_bIsRunning)
 	{
-		auto SendPackQ = m_pClientSock->GetSendPackQ();
-
-		FPlatformProcess::Sleep(0.001f);
-
+		FPlatformProcess::Sleep(0.005f);
 		m_CS.Lock();
+
+		queue <shared_ptr< Packet >>& SendPackQ = m_pClientSock->GetSendPackQ();
 
 		if (!SendPackQ.empty())
 		{
@@ -154,12 +155,6 @@ uint32 FClientRunnable_Send::Run()
 void FClientRunnable_Send::Stop() // 
 {
 	m_bIsRunning = false;
-	m_pThread->WaitForCompletion();
-}
-
-void FClientRunnable_Send::Exit() // called when func Run() is returned
-{
-	delete this;
 }
 
 bool FClientRunnable_Send::InitSock()
