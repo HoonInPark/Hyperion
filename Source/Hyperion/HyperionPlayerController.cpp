@@ -16,7 +16,7 @@ void AHyperionPlayerController::OnPossess(APawn* aPawn)
 {
 	Super::OnPossess(aPawn);
 
-	if (m_pClientSock->ActivateThreads())
+	if (0 != m_pClientSock->ActivateThreads())
 		UE_LOG(LogTemp, Error, TEXT("Failed to initialize client socket threads"));
 }
 
@@ -24,7 +24,7 @@ void AHyperionPlayerController::OnUnPossess()
 {
 	Super::OnUnPossess();
 
-	if (m_pClientSock->DeactivateThreads())
+	if (0 != m_pClientSock->DeactivateThreads())
 		UE_LOG(LogTemp, Error, TEXT("Failed to deinitialize client socket threads"));
 }
 
@@ -34,17 +34,11 @@ void AHyperionPlayerController::OnNotify_Implementation(
 	const FRotator& _InNewRot,
 	bool _bInNewInAir)
 {
-	shared_ptr<Packet> pPack = nullptr;
-
 	m_CS.Lock();
 	
-	if (m_pClientSock->GetSendPackPool().IsEmpty())
-	{
-		m_CS.Unlock();
-		return;
-	}
+	shared_ptr<Packet> pPack = m_pClientSock->GetSendPackPool().Acquire();
 
-	if (!m_pClientSock->GetSendPackPool().Acquire(pPack))
+	if (!pPack)
 	{
 		m_CS.Unlock();
 		UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));

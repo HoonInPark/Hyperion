@@ -1,4 +1,5 @@
 #pragma once
+/*
 #define SERVERHYPERION_EXPORT
 
 #ifdef SERVERHYPERION_EXPORT
@@ -6,7 +7,7 @@
 #else
 #define SERVERHYPERION_API __declspec(dllimport)
 #endif
-
+*/
 #include <iostream>
 #include <queue>
 #include <utility>
@@ -14,7 +15,7 @@
 using namespace std;
 
 template <typename T>
-class SERVERHYPERION_API ObjPool
+class /*SERVERHYPERION_API*/ ObjPool
 {
 public:
 	ObjPool() = default;
@@ -22,8 +23,7 @@ public:
 	template <class... P>
 	ObjPool(size_t _InInitSize, P&&... params);
 
-	bool IsEmpty();
-	bool Acquire(shared_ptr<T>& _pOutElem);
+	shared_ptr<T> Acquire();
 	void Return(shared_ptr<T>& _pInElem);
 
 private:
@@ -41,21 +41,14 @@ inline ObjPool<T>::ObjPool(size_t _InInitSize, P&&... params)
 }
 
 template<typename T>
-inline bool ObjPool<T>::IsEmpty()
+inline shared_ptr<T> ObjPool<T>::Acquire()
 {
-	return m_Data.empty();
-}
+	if (m_Data.empty()) return nullptr;
+	
+	shared_ptr<T> RetPtr = m_Data.front();
+	m_Data.pop();
 
-template<typename T>
-inline bool ObjPool<T>::Acquire(shared_ptr<T>& _pOutElem)
-{
-	if (_pOutElem = m_Data.front())
-	{
-		m_Data.pop();
-		return true;
-	}
-
-	return false;
+	return RetPtr;
 }
 
 template<typename T>

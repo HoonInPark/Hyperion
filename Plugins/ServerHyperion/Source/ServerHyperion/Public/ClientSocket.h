@@ -60,13 +60,12 @@ public:
 
 	inline bool SendPackQ_Pop(shared_ptr<Packet>& _pOutElem) 
 	{
-		if (_pOutElem = m_SendPackQ.front())
-		{
-			m_SendPackQ.pop();
-			return true;
-		}
+		if (m_SendPackQ.empty()) return false;
+		
+		_pOutElem = m_SendPackQ.front();
+		m_SendPackQ.pop();
 
-		return false;
+		return true;
 	}
 
 	FORCEINLINE ObjPool<Packet>& GetSendPackPool() { return m_SendPackPool; }
@@ -137,6 +136,8 @@ public:
 	virtual uint32 Run() override;
 	virtual void Stop() override;
 	virtual void Exit() override;
+
+	void WaitForCompletion() { m_pThread->WaitForCompletion(); }
 
 private:
 	void SendCompleted(const UINT32 _InDataSize);

@@ -23,10 +23,7 @@ int32 UClientSocket::ActivateThreads()
 	m_SendPackPool = ObjPool<Packet>(60);
 	m_pClientRunnable_Send = new FClientRunnable_Send(this, m_SendDataQ);
 
-	if (m_pClientRunnable_Send)
-		return 0;
-	else
-		return 1;
+	return 0;
 }
 
 int32 UClientSocket::DeactivateThreads()
@@ -68,7 +65,7 @@ FClientRunnable_Send::FClientRunnable_Send(
 	: m_pClientSock(_pInClientSock)
 	, m_SendDataQ(_InSendDataQ)
 {
-	m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_SendDataQ);
+	//m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_SendDataQ);
 
 	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_Send"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
@@ -127,6 +124,8 @@ uint32 FClientRunnable_Send::Run()
 	{
 		auto SendPackQ = m_pClientSock->GetSendPackQ();
 
+		FPlatformProcess::Sleep(0.001f);
+
 		m_CS.Lock();
 
 		if (!SendPackQ.empty())
@@ -135,16 +134,16 @@ uint32 FClientRunnable_Send::Run()
 
 			Size = pPack->Write(pStart);
 			SendMsg(Size, pStart);
-			m_pClientSock->GetSendPackPool().Return(pPack);
-
 			SendPackQ.pop();
+
+			m_pClientSock->GetSendPackPool().Return(pPack);
 			
 			m_CS.Unlock();
 		}
 		else
 		{
 			m_CS.Unlock();
-			FPlatformProcess::Sleep(0.001f);
+
 			continue;
 		}
 	}
@@ -155,12 +154,11 @@ uint32 FClientRunnable_Send::Run()
 void FClientRunnable_Send::Stop() // 
 {
 	m_bIsRunning = false;
+	m_pThread->WaitForCompletion();
 }
 
 void FClientRunnable_Send::Exit() // called when func Run() is returned
 {
-	m_pThread->WaitForCompletion();
-
 	delete this;
 }
 
