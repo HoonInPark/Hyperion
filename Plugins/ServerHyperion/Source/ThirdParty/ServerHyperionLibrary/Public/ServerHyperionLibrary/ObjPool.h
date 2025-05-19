@@ -22,6 +22,7 @@ public:
 	template <class... P>
 	ObjPool(size_t _InInitSize, P&&... params);
 
+	bool IsEmpty();
 	bool Acquire(shared_ptr<T>& _pOutElem);
 	void Return(shared_ptr<T>& _pInElem);
 
@@ -37,6 +38,12 @@ inline ObjPool<T>::ObjPool(size_t _InInitSize, P&&... params)
 	{
 		m_Data.push(make_shared<T>(forward<P>(params)...));
 	}
+}
+
+template<typename T>
+inline bool ObjPool<T>::IsEmpty()
+{
+	return m_Data.empty();
 }
 
 template<typename T>

@@ -32,7 +32,7 @@ int32 UClientSocket::ActivateThreads()
 int32 UClientSocket::DeactivateThreads()
 {
 	m_pClientRunnable_Send->Stop();
-	
+
 	return 0;
 }
 

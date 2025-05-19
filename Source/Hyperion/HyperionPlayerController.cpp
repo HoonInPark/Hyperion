@@ -38,6 +38,12 @@ void AHyperionPlayerController::OnNotify_Implementation(
 
 	m_CS.Lock();
 	
+	if (m_pClientSock->GetSendPackPool().IsEmpty())
+	{
+		m_CS.Unlock();
+		return;
+	}
+
 	if (!m_pClientSock->GetSendPackPool().Acquire(pPack))
 	{
 		m_CS.Unlock();
