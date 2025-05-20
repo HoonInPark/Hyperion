@@ -66,8 +66,6 @@ FClientRunnable_Send::FClientRunnable_Send(
 	: m_pClientSock(_pInClientSock)
 	, m_SendDataQ(_InSendDataQ)
 {
-	//m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_SendDataQ);
-
 	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_Send"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
 
@@ -113,6 +111,8 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 	if (!BindIOCompletionPort(m_IocpHandle))
 		return false;
 
+	m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_IocpHandle, m_SendDataQ);
+
 	return true;
 }
 
@@ -138,7 +138,7 @@ uint32 FClientRunnable_Send::Run()
 			SendPackQ.pop();
 
 			m_pClientSock->GetSendPackPool().Return(pPack);
-			
+
 			m_CS.Unlock();
 		}
 		else
@@ -155,6 +155,11 @@ uint32 FClientRunnable_Send::Run()
 void FClientRunnable_Send::Stop() // 
 {
 	m_bIsRunning = false;
+
+	m_pClientRunnable_IO->Stop();
+	m_pClientRunnable_IO->WaitForCompletion();
+
+	delete m_pClientRunnable_IO;
 }
 
 bool FClientRunnable_Send::InitSock()
@@ -205,7 +210,7 @@ bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 	auto hIOCP = CreateIoCompletionPort(
 		(HANDLE)m_pClientSock->GetSock(),
 		_InIocpHandle,
-		(ULONG_PTR)(this), 0);
+		(ULONG_PTR)(m_pClientRunnable_IO), 0);
 
 	if (hIOCP == INVALID_HANDLE_VALUE)
 	{
@@ -248,8 +253,10 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 
 FClientRunnable_IO::FClientRunnable_IO(
 	UClientSocket* _pInClientSock,
+	HANDLE _InIocpHandle,
 	queue<stOverlappedEx*>& _InSendDataQ)
 	: m_pClientSock(_pInClientSock)
+	, m_IocpHandle(_InIocpHandle)
 	, m_SendDataQ(_InSendDataQ)
 {
 	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_IO"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
@@ -257,35 +264,75 @@ FClientRunnable_IO::FClientRunnable_IO(
 
 FClientRunnable_IO::~FClientRunnable_IO()
 {
+	if (!m_pThread) return;
+
 	delete m_pThread;
 	m_pThread = nullptr;
 }
 
 bool FClientRunnable_IO::Init()
 {
-	return false;
+	return true;
 }
 
 uint32 FClientRunnable_IO::Run()
 {
+	//함수 호출 성공 여부
+	BOOL bSuccess = TRUE;
+	//Overlapped I/O작업에서 전송된 데이터 크기
+	DWORD dwIoSize = 0;
+	//I/O 작업을 위해 요청한 Overlapped 구조체를 받을 포인터
+	LPOVERLAPPED lpOverlapped = NULL;
+
+	FClientRunnable_IO* ThisPtr = this;
+
 	while (m_bIsRunning)
 	{
+		bSuccess = GetQueuedCompletionStatus(
+			m_IocpHandle,
+			&dwIoSize,					// 실제로 전송된 바이트
+			(PULONG_PTR)&ThisPtr,		// CompletionKey
+			&lpOverlapped,				// Overlapped IO 객체
+			INFINITE);					// 대기할 시간
 
+		if (TRUE == bSuccess && 0 == dwIoSize && NULL == lpOverlapped)
+		{
+			m_bIsRunning = false;
+			continue;
+		}
+
+		if (NULL == lpOverlapped)
+		{
+			continue;
+		}
+
+		auto pOverlappedEx = (stOverlappedEx*)lpOverlapped;
+
+		if (FALSE == bSuccess || (0 == dwIoSize && IOOperation::ACCEPT != pOverlappedEx->m_eOperation))
+		{
+			//CloseSocket(pClientInfo);
+			continue;
+		}
+
+		switch (pOverlappedEx->m_eOperation)
+		{
+		case IOOperation::SEND:
+		{
+			SendCompleted(dwIoSize);
+
+			break;
+		}
+		default:
+			break;
+		}
 	}
 
-	return uint32();
+	return 0;
 }
 
 void FClientRunnable_IO::Stop()
 {
 	m_bIsRunning = false;
-}
-
-void FClientRunnable_IO::Exit()
-{
-	m_pThread->WaitForCompletion();
-
-	delete this;
 }
 
 void FClientRunnable_IO::SendCompleted(const UINT32 _InDataSize)

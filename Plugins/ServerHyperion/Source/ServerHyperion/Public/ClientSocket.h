@@ -130,13 +130,13 @@ class SERVERHYPERION_API FClientRunnable_IO : FRunnable
 public:
 	FClientRunnable_IO(
 		UClientSocket* _pInClientSock,
+		HANDLE _InIocpHandle,
 		queue<stOverlappedEx*>& _InSendDataQ);
 	~FClientRunnable_IO();
 
 	virtual bool Init() override;
 	virtual uint32 Run() override;
 	virtual void Stop() override;
-	virtual void Exit() override;
 
 	void WaitForCompletion() { m_pThread->WaitForCompletion(); }
 
@@ -146,6 +146,8 @@ private:
 private:
 	UClientSocket* m_pClientSock;
 	queue<stOverlappedEx*>& m_SendDataQ;
+
+	HANDLE m_IocpHandle;
 
 	FCriticalSection m_CS;
 
