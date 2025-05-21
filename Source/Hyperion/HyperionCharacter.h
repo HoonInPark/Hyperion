@@ -14,6 +14,7 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
+class URemoteCharacterManager;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -91,6 +92,7 @@ private:
 	float m_TimeSinceLastUpdate{ 0.f };
 
 	UObservableBase* m_pObservable;
+	URemoteCharacterManager* m_pRemoteCharMng;
 
 	TArray<bool> m_CharStates;
 };

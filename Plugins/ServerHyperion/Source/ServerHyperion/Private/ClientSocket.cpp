@@ -190,7 +190,7 @@ bool FClientRunnable_Send::Connect()
 	SOCKADDR_IN ServerAddr;
 	ServerAddr.sin_family = AF_INET;
 	ServerAddr.sin_port = htons(11021);
-	ServerAddr.sin_addr.s_addr = inet_addr("115.23.150.83");
+	ServerAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	if (SOCKET_ERROR == connect(m_pClientSock->GetSock(), (SOCKADDR*)&ServerAddr, sizeof(SOCKADDR)))
 	{
@@ -210,7 +210,8 @@ bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 	auto hIOCP = CreateIoCompletionPort(
 		(HANDLE)m_pClientSock->GetSock(),
 		_InIocpHandle,
-		(ULONG_PTR)(m_pClientRunnable_IO), 0);
+		(ULONG_PTR)(m_pClientRunnable_IO),
+		0);
 
 	if (hIOCP == INVALID_HANDLE_VALUE)
 	{
