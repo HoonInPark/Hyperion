@@ -141,6 +141,7 @@ public:
 	void WaitForCompletion() { m_pThread->WaitForCompletion(); }
 
 private:
+	void CloseSock(bool _bIsForce = false);
 	void SendCompleted(const UINT32 _InDataSize);
 
 private:
@@ -153,5 +154,7 @@ private:
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* m_pThread{ nullptr };
+
+	//UINT64 m_LatestClosedTimeSec{ 0 };
 
 };

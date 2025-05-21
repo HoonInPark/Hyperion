@@ -3,6 +3,8 @@
 
 #include "ClientSocket.h"
 
+#include <chrono>
+
 // Sets default values for this component's properties
 UClientSocket::UClientSocket()
 {
@@ -156,10 +158,14 @@ void FClientRunnable_Send::Stop() //
 {
 	m_bIsRunning = false;
 
+	if (!m_pClientRunnable_IO) return;
+
 	m_pClientRunnable_IO->Stop();
+	CloseHandle(m_IocpHandle);
 	m_pClientRunnable_IO->WaitForCompletion();
 
 	delete m_pClientRunnable_IO;
+	m_pClientRunnable_IO = nullptr;
 }
 
 bool FClientRunnable_Send::InitSock()
@@ -311,7 +317,7 @@ uint32 FClientRunnable_IO::Run()
 
 		if (FALSE == bSuccess || (0 == dwIoSize && IOOperation::ACCEPT != pOverlappedEx->m_eOperation))
 		{
-			//CloseSocket(pClientInfo);
+			CloseSock();
 			continue;
 		}
 
@@ -334,6 +340,28 @@ uint32 FClientRunnable_IO::Run()
 void FClientRunnable_IO::Stop()
 {
 	m_bIsRunning = false;
+}
+
+void FClientRunnable_IO::CloseSock(bool _bIsForce)
+{
+	struct linger stLinger = { 0, 0 };	// SO_DONTLINGER로 설정
+
+	// bIsForce가 true이면 SO_LINGER, timeout = 0으로 설정하여 강제 종료 시킨다. 주의 : 데이터 손실이 있을수 있음 
+	if (true == _bIsForce)
+	{
+		stLinger.l_onoff = 1;
+	}
+
+	//socketClose소켓의 데이터 송수신을 모두 중단 시킨다.
+	shutdown(m_pClientSock->GetSock(), /*SD_BOTH*/SD_SEND);
+
+	//소켓 옵션을 설정한다.
+	setsockopt(m_pClientSock->GetSock(), SOL_SOCKET, SO_LINGER, (char*)&stLinger, sizeof(stLinger));
+
+	//m_LatestClosedTimeSec = chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+	//소켓 연결을 종료 시킨다.
+	closesocket(m_pClientSock->GetSock());
+	m_pClientSock->GetSock() = INVALID_SOCKET;
 }
 
 void FClientRunnable_IO::SendCompleted(const UINT32 _InDataSize)
