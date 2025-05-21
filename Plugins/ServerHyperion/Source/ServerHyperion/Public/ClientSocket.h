@@ -73,7 +73,13 @@ public:
 
 	FORCEINLINE SOCKET& GetSock() { return m_Sock; }
 
+	bool BindandListen(int _InBindPort);
 	bool SendIO();
+	bool AcceptCompletion();
+
+	virtual void OnConnect() {}
+	virtual void OnClose() {}
+	virtual void OnReceive(const UINT32 _InSize, char* _pData) {}
 
 private:
 	queue<stOverlappedEx*> m_SendDataQ;

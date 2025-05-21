@@ -4,12 +4,12 @@
 #include "HyperionPlayerController.h"
 
 #include "HyperionCharacter.h"
-#include "ServerHyperion/Public/ClientSocket.h" 
+#include "ServerHyperion/Public/HyperionClientSocket.h" 
 #include "ServerHyperionLibrary/Packet.h"
 
 AHyperionPlayerController::AHyperionPlayerController()
 {
-	m_pClientSock = CreateDefaultSubobject<UClientSocket>(TEXT("ClientSocket"));
+	m_pClientSock = CreateDefaultSubobject<UHyperionClientSocket>(TEXT("ClientSocket"));
 }
 
 void AHyperionPlayerController::OnPossess(APawn* aPawn)

@@ -7,7 +7,7 @@
 #include "HyperionBase/ObserverBase.h"
 #include "HyperionPlayerController.generated.h"
 
-class UClientSocket;
+class UHyperionClientSocket;
 /**
  * 
  */
@@ -29,7 +29,7 @@ public:
 		bool _bInNewInAir) override;
 
 private:
-	UClientSocket* m_pClientSock{ nullptr };
+	UHyperionClientSocket* m_pClientSock{ nullptr };
 
 	FCriticalSection m_CS;
 };

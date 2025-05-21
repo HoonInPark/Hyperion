@@ -36,6 +36,13 @@ int32 UClientSocket::DeactivateThreads()
 	return 0;
 }
 
+bool UClientSocket::BindandListen(int _InBindPort)
+{
+
+
+	return false;
+}
+
 bool UClientSocket::SendIO()
 {
 	auto sendOverlappedEx = m_SendDataQ.front();
@@ -58,6 +65,13 @@ bool UClientSocket::SendIO()
 	}
 
 	return true;
+}
+
+bool UClientSocket::AcceptCompletion()
+{
+
+
+	return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -323,6 +337,26 @@ uint32 FClientRunnable_IO::Run()
 
 		switch (pOverlappedEx->m_eOperation)
 		{
+		case IOOperation::ACCEPT:
+		{
+			if (m_pClientSock->AcceptCompletion())
+			{
+				m_pClientSock->OnConnect();
+			}
+			else
+			{
+				CloseSock();
+			}
+
+			break;
+		}
+		case IOOperation::RECV:
+		{
+			//m_pClientSock->OnReceive(dwIoSize, pClientInfo->RecvBuffer());
+			//pClientInfo->BindRecv();
+
+			break;
+		}
 		case IOOperation::SEND:
 		{
 			SendCompleted(dwIoSize);
@@ -353,7 +387,7 @@ void FClientRunnable_IO::CloseSock(bool _bIsForce)
 	}
 
 	//socketClose소켓의 데이터 송수신을 모두 중단 시킨다.
-	shutdown(m_pClientSock->GetSock(), /*SD_BOTH*/SD_SEND);
+	shutdown(m_pClientSock->GetSock(), SD_BOTH);
 
 	//소켓 옵션을 설정한다.
 	setsockopt(m_pClientSock->GetSock(), SOL_SOCKET, SO_LINGER, (char*)&stLinger, sizeof(stLinger));
@@ -382,4 +416,3 @@ void FClientRunnable_IO::SendCompleted(const UINT32 _InDataSize)
 
 	m_CS.Unlock();
 }
-
