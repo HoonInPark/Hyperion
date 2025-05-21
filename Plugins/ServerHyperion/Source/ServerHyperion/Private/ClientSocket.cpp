@@ -366,7 +366,7 @@ void FClientRunnable_IO::CloseSock(bool _bIsForce)
 
 void FClientRunnable_IO::SendCompleted(const UINT32 _InDataSize)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Send Complete Data Size : %d"), _InDataSize);
+	//UE_LOG(LogTemp, Warning, TEXT("Send Complete Data Size : %d"), _InDataSize);
 
 	m_CS.Lock();
 

@@ -57,7 +57,7 @@ void AHyperionPlayerController::OnNotify_Implementation(
 		pPack->SetPosY(_InNewVec.Y);
 		pPack->SetPosZ(_InNewVec.Z);
 
-		UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewVec.ToString()));
+		//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewVec.ToString()));
 	}
 
 	if (_InHeader[static_cast<int32>(ECharStatus::E_MOUSE)])
@@ -66,7 +66,7 @@ void AHyperionPlayerController::OnNotify_Implementation(
 		pPack->SetRotRoll(_InNewRot.Roll);
 		pPack->SetRotYaw(_InNewRot.Yaw);
 
-		UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewRot.ToString()));
+		//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewRot.ToString()));
 	}
 
 	m_CS.Lock();
