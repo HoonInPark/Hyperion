@@ -20,7 +20,7 @@ UClientSocket::~UClientSocket()
 
 int32 UClientSocket::ActivateThreads()
 {
-	m_SendPackPool = ObjPool<Packet>(60);
+	m_SendPackPool = ObjPool<Packet>(MAX_POOL_SIZE);
 	m_pClientRunnable_Send = new FClientRunnable_Send(this, m_SendDataQ);
 
 	return 0;
@@ -36,7 +36,7 @@ int32 UClientSocket::DeactivateThreads()
 	return 0;
 }
 
-bool UClientSocket::BindandListen(int _InBindPort)
+bool UClientSocket::StartListen(int _InBindPort)
 {
 
 
@@ -49,7 +49,7 @@ bool UClientSocket::SendIO()
 
 	DWORD dwRecvNumBytes = 0;
 	int nRet = WSASend(
-		GetSock(),
+		m_Sock,
 		&(sendOverlappedEx->m_wsaBuf),
 		1,
 		&dwRecvNumBytes,
@@ -60,18 +60,38 @@ bool UClientSocket::SendIO()
 	if (nRet == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to run WSASend() : %d"), WSAGetLastError());
-
 		return false;
 	}
 
 	return true;
 }
 
-bool UClientSocket::AcceptCompletion()
+bool UClientSocket::BindRecv()
 {
+	DWORD dwFlag = 0;
+	DWORD dwRecvNumBytes = 0;
 
+	//Overlapped I/O을 위해 각 정보를 셋팅해 준다.
+	m_RecvOverlappedEx.m_wsaBuf.len = MAX_RECV_BUFF_SIZE;
+	m_RecvOverlappedEx.m_wsaBuf.buf = m_RecvBuff;
+	m_RecvOverlappedEx.m_eOperation = IOOperation::RECV;
 
-	return false;
+	int nRet = WSARecv(m_Sock,
+		&(m_RecvOverlappedEx.m_wsaBuf),
+		1,
+		&dwRecvNumBytes,
+		&dwFlag,
+		(LPWSAOVERLAPPED) & (m_RecvOverlappedEx),
+		NULL);
+
+	//socket_error이면 client socket이 끊어진걸로 처리한다.
+	if (nRet == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to run WSARecv() : %d"), WSAGetLastError());
+		return false;
+	}
+
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -100,9 +120,7 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WSAStartup() Error : %d"), WSAGetLastError());
-
 		WSACleanup();
-
 		return false;
 	}
 
@@ -117,10 +135,8 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 	if (NULL == m_IocpHandle)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to create iocp handle : %d"), GetLastError());
-
 		closesocket(m_pClientSock->GetSock());
 		WSACleanup();
-
 		return false;
 	}
 
@@ -196,9 +212,7 @@ bool FClientRunnable_Send::InitSock()
 	if (m_pClientSock->GetSock() == INVALID_SOCKET)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to initialize client socket object"));
-
 		WSACleanup();
-
 		return false;
 	}
 	else
@@ -215,14 +229,15 @@ bool FClientRunnable_Send::Connect()
 	if (SOCKET_ERROR == connect(m_pClientSock->GetSock(), (SOCKADDR*)&ServerAddr, sizeof(SOCKADDR)))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to connect : %d"), WSAGetLastError());
-
 		closesocket(m_pClientSock->GetSock());
 		WSACleanup();
-
 		return false;
 	}
 	else
+	{
+		m_pClientSock->OnConnect();
 		return true;
+	}
 }
 
 bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
@@ -236,11 +251,9 @@ bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 	if (hIOCP == INVALID_HANDLE_VALUE)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to run CreateIoCompletionPort() : %d"), GetLastError());
-
 		CloseHandle(_InIocpHandle);
 		closesocket(m_pClientSock->GetSock());
 		WSACleanup();
-
 		return false;
 	}
 
@@ -337,23 +350,10 @@ uint32 FClientRunnable_IO::Run()
 
 		switch (pOverlappedEx->m_eOperation)
 		{
-		case IOOperation::ACCEPT:
-		{
-			if (m_pClientSock->AcceptCompletion())
-			{
-				m_pClientSock->OnConnect();
-			}
-			else
-			{
-				CloseSock();
-			}
-
-			break;
-		}
 		case IOOperation::RECV:
 		{
-			//m_pClientSock->OnReceive(dwIoSize, pClientInfo->RecvBuffer());
-			//pClientInfo->BindRecv();
+			m_pClientSock->OnReceive(dwIoSize);
+			m_pClientSock->BindRecv();
 
 			break;
 		}
@@ -396,6 +396,8 @@ void FClientRunnable_IO::CloseSock(bool _bIsForce)
 	//소켓 연결을 종료 시킨다.
 	closesocket(m_pClientSock->GetSock());
 	m_pClientSock->GetSock() = INVALID_SOCKET;
+
+	m_pClientSock->OnClose();
 }
 
 void FClientRunnable_IO::SendCompleted(const UINT32 _InDataSize)

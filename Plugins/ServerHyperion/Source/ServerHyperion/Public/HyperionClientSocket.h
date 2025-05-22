@@ -17,5 +17,5 @@ class SERVERHYPERION_API UHyperionClientSocket : public UClientSocket
 public:
 	virtual void OnConnect() override;
 	virtual void OnClose() override;
-	virtual void OnReceive(const UINT32 _InSize, char* _pData) override;
+	virtual void OnReceive(const UINT32 _InSize) override;
 };

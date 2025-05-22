@@ -9,7 +9,7 @@
 
 AHyperionPlayerController::AHyperionPlayerController()
 {
-	m_pClientSock = CreateDefaultSubobject<UHyperionClientSocket>(TEXT("ClientSocket"));
+	m_pClientSock = CreateDefaultSubobject<UHyperionClientSocket>(TEXT("HyperionClientSocket"));
 }
 
 void AHyperionPlayerController::OnPossess(APawn* aPawn)

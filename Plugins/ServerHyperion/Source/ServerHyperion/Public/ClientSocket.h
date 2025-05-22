@@ -18,6 +18,9 @@
 
 #include "ClientSocket.generated.h"
 
+#define MAX_POOL_SIZE 60
+#define MAX_RECV_BUFF_SIZE 256
+
 using namespace std;
 
 class FClientRunnable_Send;
@@ -72,14 +75,18 @@ public:
 	FORCEINLINE queue <shared_ptr< Packet >>& GetSendPackQ() { return m_SendPackQ; }
 
 	FORCEINLINE SOCKET& GetSock() { return m_Sock; }
+	FORCEINLINE char* GetRecvBuff() { return m_RecvBuff; }
 
-	bool BindandListen(int _InBindPort);
+	bool StartListen(int _InBindPort);
 	bool SendIO();
-	bool AcceptCompletion();
+	bool BindRecv();
 
 	virtual void OnConnect() {}
 	virtual void OnClose() {}
-	virtual void OnReceive(const UINT32 _InSize, char* _pData) {}
+	virtual void OnReceive(const UINT32 _InSize) {}
+
+protected:
+	char m_RecvBuff[MAX_RECV_BUFF_SIZE];
 
 private:
 	queue<stOverlappedEx*> m_SendDataQ;
@@ -88,6 +95,8 @@ private:
 	queue <shared_ptr< Packet >> m_SendPackQ;
 
 	SOCKET m_Sock{ INVALID_SOCKET };
+
+	stOverlappedEx	m_RecvOverlappedEx;	//RECV Overlapped I/O작업을 위한 변수	
 
 	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
 };
@@ -160,7 +169,4 @@ private:
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* m_pThread{ nullptr };
-
-	//UINT64 m_LatestClosedTimeSec{ 0 };
-
 };
