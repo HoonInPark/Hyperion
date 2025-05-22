@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ClientSocket.h"
+#include "ServerHyperionLibrary/Packet.h"
 #include "HyperionClientSocket.generated.h"
 
 /**
@@ -18,4 +19,7 @@ public:
 	virtual void OnConnect() override;
 	virtual void OnClose() override;
 	virtual void OnReceive(const UINT32 _InSize) override;
+
+private:
+	Packet* m_pPack;
 };

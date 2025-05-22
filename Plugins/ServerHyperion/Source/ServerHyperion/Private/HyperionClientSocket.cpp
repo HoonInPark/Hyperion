@@ -6,6 +6,8 @@
 void UHyperionClientSocket::OnConnect()
 {
 	BindRecv();
+
+	m_pPack = new Packet;
 }
 
 void UHyperionClientSocket::OnClose()
@@ -14,14 +16,13 @@ void UHyperionClientSocket::OnClose()
 
 void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 {
-	Packet Pack;
-	Pack.Read(m_RecvBuff, _InSize);
+	m_pPack->Read(m_RecvBuff, _InSize);
 
 	UE_LOG(LogTemp, Warning, TEXT("Echoing Player : %f, %f, %f || %f, %f, %f"), 
-		Pack.GetPosX(),
-		Pack.GetPosY(),
-		Pack.GetPosZ(),
-		Pack.GetRotX(),
-		Pack.GetRotY(),
-		Pack.GetRotZ());
+		m_pPack->GetPosX(),
+		m_pPack->GetPosY(),
+		m_pPack->GetPosZ(),
+		m_pPack->GetRotX(),
+		m_pPack->GetRotY(),
+		m_pPack->GetRotZ());
 }
