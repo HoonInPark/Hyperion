@@ -23,17 +23,17 @@ enum class ECharStatus
 	E_WASD = 0, // char is WASD moving
 	E_MOUSE, // char is WASD moving
 	//E_AIR, // char is in the air. it may be receiving WASD keys.
-	
+
 	E_MAX
 };
 
-UCLASS(config=Game)
+UCLASS(config = Game)
 class AHyperionCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Mesh, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh1P;
 
 	/** First person camera */
@@ -45,17 +45,17 @@ class AHyperionCharacter : public ACharacter
 	UInputMappingContext* DefaultMappingContext;
 
 	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
 
 	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
-	
+
 public:
 	AHyperionCharacter();
 
@@ -89,7 +89,10 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 
 private:
-	float m_TimeSinceLastUpdate{ 0.f };
+	void TimerTick();
+
+private:
+	FTimerHandle m_TimerHandle;
 
 	UObservableBase* m_pObservable;
 	URemoteCharacterManager* m_pRemoteCharMng;

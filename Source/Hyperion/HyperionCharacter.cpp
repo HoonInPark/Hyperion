@@ -97,30 +97,18 @@ void AHyperionCharacter::BeginPlay()
 
 	check(m_pObservable);
 
-	m_pObservable->UpdateData(
-		{ true, true },
-		GetActorLocation(),
-		GetActorRotation(),
-		false);
+	GetWorldTimerManager().SetTimer(
+		m_TimerHandle,
+		this,
+		&AHyperionCharacter::TimerTick,
+		1.0f / 30.0f,     // 30Hz
+		true);            // 반복 호출
 }
 
 // in engine loop, rhi funcs called after this tick func returned
 void AHyperionCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	m_TimeSinceLastUpdate += DeltaTime;
-	if (m_TimeSinceLastUpdate < 0.033f) return;
-
-	m_pObservable->UpdateData(
-		m_CharStates,
-		GetActorLocation(),
-		GetControlRotation(), // if GetActorRotation() is called, not GetControlRotation(), it only returns yaw changes
-		GetCharacterMovement()->IsFalling());
-
-	m_TimeSinceLastUpdate = 0.f;
-
-	//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(GetCharacterMovement()->IsFalling() ? FString("IsFalling : TRUE") : FString("IsFalling : FALSE")));
 }
 
 void AHyperionCharacter::PossessedBy(AController* NewController)
@@ -132,6 +120,15 @@ void AHyperionCharacter::PossessedBy(AController* NewController)
 	ObserverInterface.SetInterface(Cast<IObserverBase>(NewController));
 
 	m_pObservable->Subscribe(ObserverInterface);
+}
+
+void AHyperionCharacter::TimerTick()
+{
+	m_pObservable->UpdateData(
+		m_CharStates,
+		GetActorLocation(),
+		GetControlRotation(), // if GetActorRotation() is called, not GetControlRotation(), it only returns yaw changes
+		GetCharacterMovement()->IsFalling());
 }
 
 void AHyperionCharacter::Move(const FInputActionValue& Value)
