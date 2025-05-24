@@ -15,6 +15,7 @@
 #include <queue>
 #include "ServerHyperionLibrary/Packet.h"
 #include "ServerHyperionLibrary/ObjPool.h"
+#include "ServerHyperionLibrary/Define.h"
 
 #include "ClientSocket.generated.h"
 
@@ -25,23 +26,6 @@ using namespace std;
 
 class FClientRunnable_Send;
 class FClientRunnable_IO;
-
-enum class IOOperation
-{
-	ACCEPT,
-	RECV,
-	SEND
-};
-
-//WSAOVERLAPPED구조체를 확장 시켜서 필요한 정보를 더 넣었다.
-struct stOverlappedEx
-{
-	WSAOVERLAPPED m_wsaOverlapped;		//Overlapped I/O구조체
-	WSABUF		  m_wsaBuf;				//Overlapped I/O작업 버퍼
-	IOOperation   m_eOperation;			//작업 동작 종류
-	UINT32		  SessionIndex = 0;
-};
-
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SERVERHYPERION_API UClientSocket : public UActorComponent
