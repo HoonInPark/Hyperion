@@ -41,7 +41,7 @@ void AHyperionPlayerController::OnNotify_Implementation(
 	if (!pPack)
 	{
 		m_CS.Unlock();
-		UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
+		//UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
 		return;
 	}
 

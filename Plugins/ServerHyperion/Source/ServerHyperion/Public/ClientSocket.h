@@ -45,7 +45,7 @@ public:
 		m_SendPackQ.push(_pInElem);
 	}
 
-	inline bool SendPackQ_Pop(shared_ptr<Packet>& _pOutElem) 
+	inline bool SendPackQ_Pop(shared_ptr<Packet>& _pOutElem)
 	{
 		if (m_SendPackQ.empty()) return false;
 		
@@ -61,7 +61,6 @@ public:
 	FORCEINLINE SOCKET& GetSock() { return m_Sock; }
 	FORCEINLINE char* GetRecvBuff() { return m_RecvBuff; }
 
-	bool StartListen(int _InBindPort);
 	bool SendIO();
 	bool BindRecv();
 
@@ -81,8 +80,7 @@ private:
 
 	SOCKET m_Sock{ INVALID_SOCKET };
 
-	stOverlappedEx*	m_pRecvOverlappedEx;	//RECV Overlapped I/O작업을 위한 변수	
-
+	stOverlappedEx*	m_pRecvOverlappedEx{ nullptr };	//RECV Overlapped I/O작업을 위한 변수	
 	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
 };
 

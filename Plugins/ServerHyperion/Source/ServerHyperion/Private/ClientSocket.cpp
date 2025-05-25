@@ -35,17 +35,12 @@ int32 UClientSocket::DeactivateThreads()
 	m_pClientRunnable_Send->Stop();
 	m_pClientRunnable_Send->WaitForCompletion();
 
-	delete m_pClientRunnable_Send;
-	delete m_pRecvOverlappedEx;
+	if (m_pClientRunnable_Send)
+		delete m_pClientRunnable_Send;
+	if (m_pRecvOverlappedEx)
+		delete m_pRecvOverlappedEx;
 
 	return 0;
-}
-
-bool UClientSocket::StartListen(int _InBindPort)
-{
-
-
-	return false;
 }
 
 bool UClientSocket::SendIO()
@@ -81,7 +76,8 @@ bool UClientSocket::BindRecv()
 	m_pRecvOverlappedEx->m_wsaBuf.buf = m_RecvBuff;
 	m_pRecvOverlappedEx->m_eOperation = IOOperation::RECV;
 
-	int nRet = WSARecv(m_Sock,
+	int nRet = WSARecv(
+		m_Sock,
 		&(m_pRecvOverlappedEx->m_wsaBuf),
 		1,
 		&dwRecvNumBytes,
