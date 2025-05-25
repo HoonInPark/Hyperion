@@ -21,7 +21,11 @@ UClientSocket::~UClientSocket()
 int32 UClientSocket::ActivateThreads()
 {
 	m_SendPackPool = ObjPool<Packet>(MAX_POOL_SIZE);
-	m_pClientRunnable_Send = new FClientRunnable_Send(this, m_SendDataQ);
+	m_SendDataPool = ObjPool<stOverlappedEx>(MAX_POOL_SIZE);
+
+	m_pRecvOverlappedEx = new stOverlappedEx;
+
+	m_pClientRunnable_Send = new FClientRunnable_Send(this, m_SendDataQ, m_SendDataPool);
 
 	return 0;
 }
@@ -32,6 +36,7 @@ int32 UClientSocket::DeactivateThreads()
 	m_pClientRunnable_Send->WaitForCompletion();
 
 	delete m_pClientRunnable_Send;
+	delete m_pRecvOverlappedEx;
 
 	return 0;
 }
@@ -45,7 +50,7 @@ bool UClientSocket::StartListen(int _InBindPort)
 
 bool UClientSocket::SendIO()
 {
-	auto sendOverlappedEx = m_SendDataQ.front();
+	shared_ptr< stOverlappedEx > sendOverlappedEx = m_SendDataQ.front();
 
 	DWORD dwRecvNumBytes = 0;
 	int nRet = WSASend(
@@ -54,7 +59,7 @@ bool UClientSocket::SendIO()
 		1,
 		&dwRecvNumBytes,
 		0,
-		(LPWSAOVERLAPPED)sendOverlappedEx,
+		(LPWSAOVERLAPPED)sendOverlappedEx.get(),
 		NULL);
 
 	if (nRet == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
@@ -72,16 +77,16 @@ bool UClientSocket::BindRecv()
 	DWORD dwRecvNumBytes = 0;
 
 	//Overlapped I/O을 위해 각 정보를 셋팅해 준다.
-	m_RecvOverlappedEx.m_wsaBuf.len = MAX_RECV_BUFF_SIZE;
-	m_RecvOverlappedEx.m_wsaBuf.buf = m_RecvBuff;
-	m_RecvOverlappedEx.m_eOperation = IOOperation::RECV;
+	m_pRecvOverlappedEx->m_wsaBuf.len = MAX_RECV_BUFF_SIZE;
+	m_pRecvOverlappedEx->m_wsaBuf.buf = m_RecvBuff;
+	m_pRecvOverlappedEx->m_eOperation = IOOperation::RECV;
 
 	int nRet = WSARecv(m_Sock,
-		&(m_RecvOverlappedEx.m_wsaBuf),
+		&(m_pRecvOverlappedEx->m_wsaBuf),
 		1,
 		&dwRecvNumBytes,
 		&dwFlag,
-		(LPWSAOVERLAPPED) & (m_RecvOverlappedEx),
+		(LPWSAOVERLAPPED)m_pRecvOverlappedEx,
 		NULL);
 
 	//socket_error이면 client socket이 끊어진걸로 처리한다.
@@ -97,10 +102,12 @@ bool UClientSocket::BindRecv()
 //////////////////////////////////////////////////////////////////////////
 
 FClientRunnable_Send::FClientRunnable_Send(
-	UClientSocket* _pInClientSock,
-	queue<stOverlappedEx*>& _InSendDataQ)
-	: m_pClientSock(_pInClientSock)
-	, m_SendDataQ(_InSendDataQ)
+	UClientSocket*							_pInClientSock,
+	queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ,
+	ObjPool<stOverlappedEx>&				_InSendDataPool)
+	: m_pClientSock	(_pInClientSock)
+	, m_SendDataQ	(_InSendDataQ)
+	, m_SendDataPool(_InSendDataPool)
 {
 	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_Send"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
@@ -143,7 +150,7 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 	if (!BindIOCompletionPort(m_IocpHandle))
 		return false;
 
-	m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_IocpHandle, m_SendDataQ);
+	m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_IocpHandle, m_SendDataQ, m_SendDataPool);
 
 	return true;
 }
@@ -262,16 +269,33 @@ bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 
 bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 {
-	auto sendOverlappedEx = new stOverlappedEx;
-	ZeroMemory(sendOverlappedEx, sizeof(stOverlappedEx));
-	sendOverlappedEx->m_wsaBuf.len = _InSize;
-	sendOverlappedEx->m_wsaBuf.buf = new char[_InSize];
-	CopyMemory(sendOverlappedEx->m_wsaBuf.buf, _pInMsg, _InSize);
-	sendOverlappedEx->m_eOperation = IOOperation::SEND;
+	m_CS.Lock();
+
+	shared_ptr<stOverlappedEx> pSendOverlappedEx = m_SendDataPool.Acquire();
+	if (!pSendOverlappedEx)
+	{
+		m_CS.Unlock();
+		UE_LOG(LogTemp, Error, TEXT("Failed to run Acquire() From Send Data Pool"));
+
+		return false;
+	}
+
+	m_CS.Unlock();
+
+	//ZeroMemory(pSendOverlappedEx.get(), sizeof(stOverlappedEx));
+	//pSendOverlappedEx->m_wsaBuf.len = _InSize;
+	//pSendOverlappedEx->m_wsaBuf.buf = new char[_InSize];
+	//CopyMemory(pSendOverlappedEx->m_wsaBuf.buf, _pInMsg, _InSize);
+	//pSendOverlappedEx->m_eOperation = IOOperation::SEND;
+
+	pSendOverlappedEx->Init();
+	pSendOverlappedEx->m_wsaBuf.len = _InSize;
+	CopyMemory(pSendOverlappedEx->m_wsaBuf.buf, _pInMsg, _InSize);
+	pSendOverlappedEx->m_eOperation = IOOperation::SEND;
 
 	m_CS.Lock();
 
-	m_SendDataQ.push(sendOverlappedEx);
+	m_SendDataQ.push(pSendOverlappedEx);
 
 	if (m_SendDataQ.size() == 1)
 	{
@@ -286,12 +310,14 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 //////////////////////////////////////////////////////////////////////////
 
 FClientRunnable_IO::FClientRunnable_IO(
-	UClientSocket* _pInClientSock,
-	HANDLE _InIocpHandle,
-	queue<stOverlappedEx*>& _InSendDataQ)
-	: m_pClientSock(_pInClientSock)
-	, m_IocpHandle(_InIocpHandle)
-	, m_SendDataQ(_InSendDataQ)
+	UClientSocket*							_pInClientSock,
+	HANDLE									_InIocpHandle,
+	queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ, 
+	ObjPool<stOverlappedEx>&				_InSendDataPool)
+	: m_pClientSock	(_pInClientSock)
+	, m_IocpHandle	(_InIocpHandle)
+	, m_SendDataQ	(_InSendDataQ)
+	, m_SendDataPool(_InSendDataPool)
 {
 	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_IO"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
@@ -406,9 +432,7 @@ void FClientRunnable_IO::SendCompleted(const UINT32 _InDataSize)
 
 	m_CS.Lock();
 
-	delete[] m_SendDataQ.front()->m_wsaBuf.buf;
-	delete m_SendDataQ.front();
-
+	m_SendDataPool.Return(m_SendDataQ.front());
 	m_SendDataQ.pop();
 
 	if (m_SendDataQ.empty() == false)

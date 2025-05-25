@@ -19,10 +19,10 @@
 
 #include "ClientSocket.generated.h"
 
+using namespace std;
+
 #define MAX_POOL_SIZE 60
 #define MAX_RECV_BUFF_SIZE 256
-
-using namespace std;
 
 class FClientRunnable_Send;
 class FClientRunnable_IO;
@@ -32,7 +32,7 @@ class SERVERHYPERION_API UClientSocket : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UClientSocket();
 	~UClientSocket();
@@ -73,14 +73,15 @@ protected:
 	char m_RecvBuff[MAX_RECV_BUFF_SIZE];
 
 private:
-	queue<stOverlappedEx*> m_SendDataQ;
+	queue <shared_ptr< stOverlappedEx >>	m_SendDataQ;
+	ObjPool<stOverlappedEx>					m_SendDataPool;
 
 	ObjPool<Packet> m_SendPackPool;
 	queue <shared_ptr< Packet >> m_SendPackQ;
 
 	SOCKET m_Sock{ INVALID_SOCKET };
 
-	stOverlappedEx	m_RecvOverlappedEx;	//RECV Overlapped I/O작업을 위한 변수	
+	stOverlappedEx*	m_pRecvOverlappedEx;	//RECV Overlapped I/O작업을 위한 변수	
 
 	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
 };
@@ -91,8 +92,9 @@ class SERVERHYPERION_API FClientRunnable_Send : FRunnable
 {
 public:
 	FClientRunnable_Send(
-		UClientSocket* _pInClientSock, 
-		queue<stOverlappedEx*>& _InSendDataQ);
+		UClientSocket*							_pInClientSock,
+		queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ,
+		ObjPool<stOverlappedEx>&				_InSendDataPool);
 	~FClientRunnable_Send();
 
 	virtual bool Init() override;
@@ -109,8 +111,9 @@ private:
 	bool SendMsg(const UINT32 _InSize, char* _pInMsg);
 
 private:
-	UClientSocket* m_pClientSock;
-	queue<stOverlappedEx*>& m_SendDataQ;
+	UClientSocket*							m_pClientSock;
+	queue <shared_ptr< stOverlappedEx >>&	m_SendDataQ;
+	ObjPool<stOverlappedEx>&				m_SendDataPool;
 
 	HANDLE m_IocpHandle{ INVALID_HANDLE_VALUE };
 
@@ -128,9 +131,10 @@ class SERVERHYPERION_API FClientRunnable_IO : FRunnable
 {
 public:
 	FClientRunnable_IO(
-		UClientSocket* _pInClientSock,
-		HANDLE _InIocpHandle,
-		queue<stOverlappedEx*>& _InSendDataQ);
+		UClientSocket*							_pInClientSock,
+		HANDLE									_InIocpHandle,
+		queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ, 
+		ObjPool<stOverlappedEx>&				_InSendDataPool);
 	~FClientRunnable_IO();
 
 	virtual bool Init() override;
@@ -144,10 +148,10 @@ private:
 	void SendCompleted(const UINT32 _InDataSize);
 
 private:
-	UClientSocket* m_pClientSock;
-	queue<stOverlappedEx*>& m_SendDataQ;
-
-	HANDLE m_IocpHandle;
+	UClientSocket*							m_pClientSock;
+	HANDLE									m_IocpHandle;
+	queue <shared_ptr< stOverlappedEx >>&	m_SendDataQ;
+	ObjPool<stOverlappedEx>&				m_SendDataPool;
 
 	FCriticalSection m_CS;
 
