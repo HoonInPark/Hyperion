@@ -24,7 +24,7 @@ void AHyperionPlayerController::OnPossess(APawn* aPawn)
 {
 	Super::OnPossess(aPawn);
 
-	// if statement for what pawn class is gonna be possessed
+	// if statement needed for what pawn class is gonna be possessed
 
 
 	if (0 != m_pClientSock->ActivateThreads())
