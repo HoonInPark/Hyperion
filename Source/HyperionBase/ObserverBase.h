@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "HyperionBase/ObservableBase.h"
 
 #include "ObserverBase.generated.h"
 
@@ -24,10 +25,6 @@ class HYPERIONBASE_API IObserverBase
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Observer")
-	void OnNotify(
-		const TArray<bool>& _InHeader,
-		const FVector& _InNewVec,
-		const FRotator& _InNewRot,
-		bool _bInNewInAir);
+	void OnNotify(UObservableBase* _pInObservable);
 	
 };

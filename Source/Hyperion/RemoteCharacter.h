@@ -27,10 +27,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;	
 
-	virtual void OnNotify_Implementation(
-		const TArray<bool>& _InHeader,
-		const FVector& _InNewVec,
-		const FRotator& _InNewRot,
-		bool _bInNewInAir) override;
+	virtual void OnNotify_Implementation(UObservableBase* _pInObservable) override;
 
 };

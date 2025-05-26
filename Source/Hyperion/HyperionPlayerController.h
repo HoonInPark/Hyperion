@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "HyperionBase/ObserverBase.h"
+#include "HyperionBase/ObservableBase.h"
 #include "HyperionPlayerController.generated.h"
 
 class UHyperionClientSocket;
@@ -24,11 +25,7 @@ public:
 	virtual void OnPossess(APawn* aPawn) override;
 	virtual void OnUnPossess() override;
 
-	virtual void OnNotify_Implementation(
-		const TArray<bool>& _InHeader,
-		const FVector& _InNewVec,
-		const FRotator& _InNewRot,
-		bool _bInNewInAir) override;
+	virtual void OnNotify_Implementation(UObservableBase* _pInObservable) override;
 
 private:
 	UHyperionClientSocket* m_pClientSock{ nullptr };

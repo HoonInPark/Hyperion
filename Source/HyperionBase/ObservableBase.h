@@ -18,25 +18,11 @@ public:
 	UObservableBase();
 
 public:
-	void Subscribe(TScriptInterface<IObserverBase> _Observer);
-	void Unsubscribe(TScriptInterface<IObserverBase> _Observer);
+	virtual void Subscribe(TScriptInterface<IObserverBase> _Observer);
+	virtual void Unsubscribe(TScriptInterface<IObserverBase> _Observer);
+
 	void NotifyObservers();
-
-	void UpdateData(
-		const TArray<bool>& _InHeader,
-		const FVector& _InNewVec,
-		const FRotator& _InNewRot,
-		bool _bInNewInAir);
-
-	FORCEINLINE FVector GetData() const { return m_PlayerLoc; }
 
 private:
 	TArray<TScriptInterface<IObserverBase>> Observers;
-
-	TArray<bool> m_PlayerHeader;
-	
-	FVector m_PlayerLoc;
-	FRotator m_PlayerRot;
-	bool m_bPlayerInAir;
-
 };

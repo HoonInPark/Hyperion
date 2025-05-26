@@ -31,11 +31,6 @@ void ARemoteCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 }
 
-void ARemoteCharacter::OnNotify_Implementation(
-	const TArray<bool>& _InHeader,
-	const FVector& _InNewVec,
-	const FRotator& _InNewRot,
-	bool _bInNewInAir)
+void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 {
 }
-

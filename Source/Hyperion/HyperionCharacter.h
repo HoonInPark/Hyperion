@@ -7,7 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "HyperionCharacter.generated.h"
 
-class UObservableBase;
+class UCharacterObservable;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -94,7 +94,7 @@ private:
 private:
 	FTimerHandle m_TimerHandle;
 
-	UObservableBase* m_pObservable;
+	UCharacterObservable* m_pObservable;
 	URemoteCharacterManager* m_pRemoteCharMng;
 
 	TArray<bool> m_CharStates;
