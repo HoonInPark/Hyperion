@@ -9,8 +9,7 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"Engine",
-				"HyperionBase"
+				"Engine"
 			]
 		},
 		{
@@ -19,7 +18,15 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine",
-				"CoreUObject"
+				"UMG"
+			]
+		},
+		{
+			"Name": "HyperionUI",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
 			]
 		}
 	],

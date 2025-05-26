@@ -19,6 +19,8 @@ class HYPERION_API AHyperionPlayerController : public APlayerController, public 
 public:
 	AHyperionPlayerController();
 
+	virtual void BeginPlay() override;
+
 	virtual void OnPossess(APawn* aPawn) override;
 	virtual void OnUnPossess() override;
 
