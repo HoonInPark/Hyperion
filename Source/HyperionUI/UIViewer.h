@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HyperionBase/ObservableBase.h"
-#include "UIObservable.generated.h"
+#include "HyperionBase/ObserverAsObservableBase.h"
+#include "UIViewer.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class HYPERION_API UUIObservable : public UObservableBase
+class HYPERIONUI_API UUIViewer : public UObserverAsObservableBase
 {
 	GENERATED_BODY()
 	

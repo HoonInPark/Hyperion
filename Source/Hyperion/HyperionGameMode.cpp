@@ -6,6 +6,9 @@
 #include "HyperionPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "HyperionUI/UIController.h"
+#include "HyperionUI/UIModel.h"
+#include "HyperionUI/UIViewer.h"
 
 AHyperionGameMode::AHyperionGameMode()
 	: Super()
@@ -17,22 +20,15 @@ AHyperionGameMode::AHyperionGameMode()
 
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 	PlayerControllerClass = AHyperionPlayerController::StaticClass();
+
+	m_pUIController = CreateDefaultSubobject<UUIController>("UIController");
+	m_pUIModel = CreateDefaultSubobject<UUIModel>("UIModel");
+	m_pUIViewer = CreateDefaultSubobject<UUIViewer>("UIViewer");
 }
 
 void AHyperionGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// auto pWorld = GetWorld();
-	// check(pWorld);
-	
-	// auto pUICtrl = pWorld->SpawnActor<AUIController>(AUIController::StaticClass(), FVector(), FRotator(), FActorSpawnParameters());
-	// auto pUIModel = pWorld->SpawnActor<AUIModel>(AUIModel::StaticClass(), FVector(), FRotator(), FActorSpawnParameters());
-
-	// check(pUICtrl);
-	// check(pUIModel);
-	
-	// pUICtrl->Subscribe(pUIModel);
-	// pUIModel->Subscribe(pUICtrl);
 
 }
