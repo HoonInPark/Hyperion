@@ -18,7 +18,7 @@ UClientSocket::~UClientSocket()
 {
 }
 
-int32 UClientSocket::ActivateThreads()
+int32 UClientSocket::ActivateThreads(APawn* aPawn)
 {
 	m_SendPackPool = ObjPool<Packet>(MAX_POOL_SIZE);
 	m_SendDataPool = ObjPool<stOverlappedEx>(MAX_POOL_SIZE);

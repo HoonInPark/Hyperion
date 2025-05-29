@@ -37,8 +37,8 @@ public:
 	UClientSocket();
 	~UClientSocket();
 
-	int32 ActivateThreads();
-	int32 DeactivateThreads();
+	virtual int32 ActivateThreads(APawn* aPawn);
+	virtual int32 DeactivateThreads();
 
 	inline void SendPackQ_Push(shared_ptr<Packet> _pInElem)
 	{

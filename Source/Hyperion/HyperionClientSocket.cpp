@@ -3,6 +3,22 @@
 
 #include "HyperionClientSocket.h"
 
+#include "HyperionCharacter.h"
+
+int32 UHyperionClientSocket::ActivateThreads(APawn* aPawn)
+{
+	m_pChar = CastChecked<AHyperionCharacter>(aPawn);
+
+	return Super::ActivateThreads(aPawn);
+}
+
+int32 UHyperionClientSocket::DeactivateThreads()
+{
+	Super::DeactivateThreads();
+
+	return int32();
+}
+
 void UHyperionClientSocket::OnConnect()
 {
 	BindRecv();

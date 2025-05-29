@@ -9,6 +9,7 @@
 #include "HyperionPlayerController.generated.h"
 
 class UHyperionClientSocket;
+class URemoteCharacterManager;
 /**
  * 
  */
@@ -29,6 +30,7 @@ public:
 
 private:
 	UHyperionClientSocket* m_pClientSock{ nullptr };
+	URemoteCharacterManager* m_pRemoteCharMng{ nullptr };
 
 	FCriticalSection m_CS;
 };

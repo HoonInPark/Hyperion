@@ -5,12 +5,14 @@
 
 #include "HyperionCharacter.h"
 #include "CharacterObservable.h"
-#include "ServerHyperion/Public/HyperionClientSocket.h" 
+#include "HyperionClientSocket.h" 
 #include "ServerHyperionLibrary/Packet.h"
+#include "RemoteCharacterManager.h"
 
 AHyperionPlayerController::AHyperionPlayerController()
 {
 	m_pClientSock = CreateDefaultSubobject<UHyperionClientSocket>(TEXT("HyperionClientSocket"));
+	m_pRemoteCharMng = CreateDefaultSubobject<URemoteCharacterManager>(TEXT("RemoteCharacterManager"));
 }
 
 void AHyperionPlayerController::BeginPlay()
@@ -27,7 +29,7 @@ void AHyperionPlayerController::OnPossess(APawn* aPawn)
 	// if statement needed for what pawn class is gonna be possessed
 
 
-	if (0 != m_pClientSock->ActivateThreads())
+	if (0 != m_pClientSock->ActivateThreads(aPawn))
 		UE_LOG(LogTemp, Error, TEXT("Failed to initialize client socket threads"));
 }
 
@@ -41,8 +43,7 @@ void AHyperionPlayerController::OnUnPossess()
 
 void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObservable)
 {
-	auto pObservable = Cast<UCharacterObservable>(_pInObservable);
-	check(pObservable);
+	auto pObservable = CastChecked<UCharacterObservable>(_pInObservable);
 
 	m_CS.Lock();
 	
