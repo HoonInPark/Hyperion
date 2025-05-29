@@ -372,6 +372,12 @@ uint32 FClientRunnable_IO::Run()
 
 		switch (pOverlappedEx->m_eOperation)
 		{
+		case IOOperation::INIT:
+		{
+			//SetSessionIdx();
+
+			break;
+		}
 		case IOOperation::RECV:
 		{
 			m_pClientSock->OnReceive(dwIoSize);

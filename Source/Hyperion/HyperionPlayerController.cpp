@@ -58,7 +58,7 @@ void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObs
 
 	m_CS.Unlock();
 
-	pPack->SetSessionIdx(2);
+	pPack->SetSessionIdx(0);
 	pPack->SetIsJumping(pObservable->GetbPlayerInAir());
 
 	// Handle the notification from the observable

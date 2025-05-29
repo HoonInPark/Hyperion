@@ -55,6 +55,9 @@ public:
 		return true;
 	}
 
+	FORCEINLINE UINT32 GetSessionIdx() const { return m_SessionIdx; }
+	FORCEINLINE void SetSessionIdx(const UINT32 _InSessionIdx) { m_SessionIdx = _InSessionIdx; }
+
 	FORCEINLINE ObjPool<Packet>& GetSendPackPool() { return m_SendPackPool; }
 	FORCEINLINE queue <shared_ptr< Packet >>& GetSendPackQ() { return m_SendPackQ; }
 
@@ -72,6 +75,8 @@ protected:
 	char m_RecvBuff[MAX_RECV_BUFF_SIZE];
 
 private:
+	UINT32 m_SessionIdx{ 0 };	// Session Index
+
 	queue <shared_ptr< stOverlappedEx >>	m_SendDataQ;
 	ObjPool<stOverlappedEx>					m_SendDataPool;
 

@@ -7,11 +7,11 @@
 #include "ServerHyperionLibrary/Packet.h"
 #include "HyperionClientSocket.generated.h"
 
+class URemoteCharacterManager;
+
 /**
  * 
  */
-class AHyperionCharacter;
-
 UCLASS()
 class SERVERHYPERION_API UHyperionClientSocket : public UClientSocket
 {
@@ -26,7 +26,7 @@ public:
 	virtual void OnReceive(const UINT32 _InSize) override;
 
 private:
-	AHyperionCharacter* m_pChar{ nullptr };
+	URemoteCharacterManager* m_pRemoteCharMng{ nullptr };
 
 	Packet* m_pPack;
 };
