@@ -45,7 +45,6 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 {
 	m_pPack->Read(m_RecvBuff, _InSize);
 
-	/*
 	UE_LOG(LogTemp, Warning, TEXT("Echoing Player %d : %f, %f, %f || %f, %f, %f"), 
 		m_pPack->GetSessionIdx(),
 		m_pPack->GetPosX(),
@@ -54,7 +53,6 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 		m_pPack->GetRotX(),
 		m_pPack->GetRotY(),
 		m_pPack->GetRotZ());
-	*/
-
+	
 	
 }

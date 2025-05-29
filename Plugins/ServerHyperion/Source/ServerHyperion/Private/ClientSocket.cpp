@@ -372,9 +372,9 @@ uint32 FClientRunnable_IO::Run()
 
 		switch (pOverlappedEx->m_eOperation)
 		{
-		case IOOperation::INIT:
+		case IOOperation::ACCEPT:
 		{
-			//SetSessionIdx();
+
 
 			break;
 		}
