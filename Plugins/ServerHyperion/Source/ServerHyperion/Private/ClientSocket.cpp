@@ -308,7 +308,7 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 FClientRunnable_IO::FClientRunnable_IO(
 	UClientSocket*							_pInClientSock,
 	HANDLE									_InIocpHandle,
-	queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ, 
+	queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ,
 	ObjPool<stOverlappedEx>&				_InSendDataPool)
 	: m_pClientSock	(_pInClientSock)
 	, m_IocpHandle	(_InIocpHandle)

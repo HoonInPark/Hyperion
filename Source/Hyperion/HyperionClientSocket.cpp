@@ -45,7 +45,8 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 {
 	m_pPack->Read(m_RecvBuff, _InSize);
 
-	UE_LOG(LogTemp, Warning, TEXT("Echoing Player %d : %f, %f, %f || %f, %f, %f"), 
+	UE_LOG(LogTemp, Warning, TEXT("msg type: %d || cli idx %d || %f, %f, %f || %f, %f, %f"), 
+		static_cast<int>(m_pPack->GetMsgType()),
 		m_pPack->GetSessionIdx(),
 		m_pPack->GetPosX(),
 		m_pPack->GetPosY(),
