@@ -74,7 +74,7 @@ bool UClientSocket::BindRecv()
 	//Overlapped I/O을 위해 각 정보를 셋팅해 준다.
 	m_pRecvOverlappedEx->m_wsaBuf.len = MAX_RECV_BUFF_SIZE;
 	m_pRecvOverlappedEx->m_wsaBuf.buf = m_RecvBuff;
-	m_pRecvOverlappedEx->m_eOperation = IOOperation::RECV;
+	m_pRecvOverlappedEx->m_eOperation = IOOperation::IO_RECV;
 
 	int nRet = WSARecv(
 		m_Sock,
@@ -287,7 +287,7 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 	pSendOverlappedEx->Init();
 	pSendOverlappedEx->m_wsaBuf.len = _InSize;
 	CopyMemory(pSendOverlappedEx->m_wsaBuf.buf, _pInMsg, _InSize);
-	pSendOverlappedEx->m_eOperation = IOOperation::SEND;
+	pSendOverlappedEx->m_eOperation = IOOperation::IO_SEND;
 
 	m_CS.Lock();
 
@@ -364,7 +364,7 @@ uint32 FClientRunnable_IO::Run()
 
 		auto pOverlappedEx = (stOverlappedEx*)lpOverlapped;
 
-		if (FALSE == bSuccess || (0 == dwIoSize && IOOperation::ACCEPT != pOverlappedEx->m_eOperation))
+		if (FALSE == bSuccess || (0 == dwIoSize && IOOperation::IO_ACCEPT != pOverlappedEx->m_eOperation))
 		{
 			CloseSock();
 			continue;
@@ -372,20 +372,14 @@ uint32 FClientRunnable_IO::Run()
 
 		switch (pOverlappedEx->m_eOperation)
 		{
-		case IOOperation::ACCEPT:
-		{
-
-
-			break;
-		}
-		case IOOperation::RECV:
+		case IOOperation::IO_RECV:
 		{
 			m_pClientSock->OnReceive(dwIoSize);
 			m_pClientSock->BindRecv();
 
 			break;
 		}
-		case IOOperation::SEND:
+		case IOOperation::IO_SEND:
 		{
 			SendCompleted(dwIoSize);
 
