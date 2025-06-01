@@ -56,7 +56,7 @@ public:
 	}
 
 	FORCEINLINE UINT32 GetSessionIdx() const { return m_SessionIdx; }
-	FORCEINLINE void SetSessionIdx(const UINT32 _InSessionIdx) { m_SessionIdx = _InSessionIdx; }
+	FORCEINLINE bool IsSessionIdxSet() const { return m_bIsSessionIdxSet; }
 
 	FORCEINLINE ObjPool<Packet>& GetSendPackPool() { return m_SendPackPool; }
 	FORCEINLINE queue <shared_ptr< Packet >>& GetSendPackQ() { return m_SendPackQ; }
@@ -72,10 +72,21 @@ public:
 	virtual void OnReceive(const UINT32 _InSize) {}
 
 protected:
+	FORCEINLINE bool SetSessionIdx(const UINT32 _InSessionIdx) 
+	{
+		if (m_bIsSessionIdxSet) return false;
+
+		m_bIsSessionIdxSet = true;
+		m_SessionIdx = _InSessionIdx;
+		return true;
+	}
+
+protected:
 	char m_RecvBuff[MAX_RECV_BUFF_SIZE];
 
 private:
-	UINT32 m_SessionIdx{ 0 };	// Session Index
+	atomic<bool> m_bIsSessionIdxSet{ false };
+	atomic<UINT32> m_SessionIdx{ 0 };	// Session Index
 
 	queue <shared_ptr< stOverlappedEx >>	m_SendDataQ;
 	ObjPool<stOverlappedEx>					m_SendDataPool;

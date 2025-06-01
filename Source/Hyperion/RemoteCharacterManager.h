@@ -9,12 +9,15 @@
 /**
  * 
  */
+
+class Packet;
 UCLASS()
 class HYPERION_API URemoteCharacterManager : public UObservableBase
 {
 	GENERATED_BODY()
 	
-	
-	
+public:
+	URemoteCharacterManager();
+	void Replicate(Packet* _pInPack);
 	
 };

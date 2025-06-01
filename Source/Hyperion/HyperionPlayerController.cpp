@@ -43,6 +43,8 @@ void AHyperionPlayerController::OnUnPossess()
 
 void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObservable)
 {
+	if (!m_pClientSock->IsSessionIdxSet()) return;
+
 	auto pObservable = CastChecked<UCharacterObservable>(_pInObservable);
 
 	m_CS.Lock();
@@ -58,7 +60,9 @@ void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObs
 
 	m_CS.Unlock();
 
-	pPack->SetSessionIdx(0);
+	pPack->SetMsgType(MsgType::MSG_GAME);
+	pPack->SetSessionIdx(m_pClientSock->GetSessionIdx());
+
 	pPack->SetIsJumping(pObservable->GetbPlayerInAir());
 
 	// Handle the notification from the observable

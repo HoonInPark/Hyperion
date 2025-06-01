@@ -5,6 +5,7 @@
 
 #include "HyperionCharacter.h"
 #include "RemoteCharacterManager.h"
+#include "HyperionPlayerController.h"
 
 int32 UHyperionClientSocket::ActivateThreads(APawn* aPawn)
 {
@@ -55,5 +56,29 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 		m_pPack->GetRotY(),
 		m_pPack->GetRotZ());
 	
-	
+	switch (m_pPack->GetMsgType())
+	{
+	case MsgType::MSG_INIT:
+	{
+		check(SetSessionIdx(m_pPack->GetSessionIdx()));
+
+		break;
+	}
+	case MsgType::MSG_GAME:
+	{
+		auto pOwner = GetOwner();
+		if (auto pController = Cast<AHyperionPlayerController>(pOwner))
+		{
+			pController->GetRemoteCharMng()->Replicate(m_pPack);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to cast Owner to AHyperionPlayerController"));
+		}
+
+		break;
+	}
+	default:
+		break;
+	}
 }

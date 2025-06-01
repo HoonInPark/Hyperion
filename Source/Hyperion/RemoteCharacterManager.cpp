@@ -2,7 +2,13 @@
 
 
 #include "RemoteCharacterManager.h"
+#include "ServerHyperionLibrary/Packet.h"
 
+URemoteCharacterManager::URemoteCharacterManager()
+{
+	PrimaryComponentTick.bCanEverTick = false;
+}
 
-
-
+void URemoteCharacterManager::Replicate(Packet* _pInPack)
+{
+}

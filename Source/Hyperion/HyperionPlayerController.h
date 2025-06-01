@@ -28,6 +28,8 @@ public:
 
 	virtual void OnNotify_Implementation(UObservableBase* _pInObservable) override;
 
+	FORCEINLINE URemoteCharacterManager* GetRemoteCharMng() const { return m_pRemoteCharMng; }
+
 private:
 	UHyperionClientSocket* m_pClientSock{ nullptr };
 	URemoteCharacterManager* m_pRemoteCharMng{ nullptr };
