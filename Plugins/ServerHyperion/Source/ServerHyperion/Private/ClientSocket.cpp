@@ -159,7 +159,7 @@ uint32 FClientRunnable_Send::Run()
 
 	while (m_bIsRunning)
 	{
-		FPlatformProcess::Sleep(0.007f);
+		FPlatformProcess::Sleep(0.003f);
 		m_CS.Lock();
 
 		queue <shared_ptr< Packet >>& SendPackQ = m_pClientSock->GetSendPackQ();

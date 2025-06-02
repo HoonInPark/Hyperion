@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "HyperionBase/ObservableBase.h"
+#include "RemoteCharacter.h"
 #include "RemoteCharacterManager.generated.h"
 
 /**
@@ -18,6 +19,12 @@ class HYPERION_API URemoteCharacterManager : public UObservableBase
 	
 public:
 	URemoteCharacterManager();
+
 	void Replicate(Packet* _pInPack);
 	
+private:
+	virtual void OnReplicate(Packet* _pInPack);
+	
+private:
+	TMap<UINT32, ARemoteCharacter*> m_RemoteChars;
 };
