@@ -50,29 +50,31 @@ void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObs
 	m_CS.Lock();
 	
 	shared_ptr<Packet> pPack = m_pClientSock->GetSendPackPool().Acquire();
+	m_CS.Unlock();
 
 	if (!pPack)
 	{
-		m_CS.Unlock();
 		//UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
 		return;
 	}
 
-	m_CS.Unlock();
-
 	pPack->SetMsgType(MsgType::MSG_GAME);
 	pPack->SetSessionIdx(m_pClientSock->GetSessionIdx());
 
-	pPack->SetIsJumping(pObservable->GetbPlayerInAir());
+	pPack->SetIsJumping(pObservable->GetPlayerInAir());
 
 	// Handle the notification from the observable
-	if (pObservable->GetPlayerHeader()[static_cast<int32>(ECharStatus::E_WASD)] || pObservable->GetbPlayerInAir())
+	if (pObservable->GetPlayerHeader()[static_cast<int32>(ECharStatus::E_WASD)] || pObservable->GetPlayerInAir())
 	{
 		pPack->SetPosX(pObservable->GetPlayerLoc().X);
 		pPack->SetPosY(pObservable->GetPlayerLoc().Y);
 		pPack->SetPosZ(pObservable->GetPlayerLoc().Z);
-
-		//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewVec.ToString()));
+		/*
+		UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %f, %f, %f"), 
+			pObservable->GetPlayerLoc().X,
+			pObservable->GetPlayerLoc().Y,
+			pObservable->GetPlayerLoc().Z);
+		*/
 	}
 
 	if (pObservable->GetPlayerHeader()[static_cast<int32>(ECharStatus::E_MOUSE)])
@@ -81,7 +83,12 @@ void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObs
 		pPack->SetRotRoll(pObservable->GetPlayerRot().Roll);
 		pPack->SetRotYaw(pObservable->GetPlayerRot().Yaw);
 
-		//UE_LOG(LogTemp, Warning, TEXT("Player Location Updated: %s"), *(_InNewRot.ToString()));
+		/*
+		UE_LOG(LogTemp, Warning, TEXT("Player Rotation Updated: %f, %f, %f"), 
+			pObservable->GetPlayerRot().Pitch,
+			pObservable->GetPlayerRot().Roll,
+			pObservable->GetPlayerRot().Yaw);
+		*/
 	}
 
 	m_CS.Lock();

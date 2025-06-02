@@ -25,7 +25,7 @@ public:
 
 	const FVector& GetPlayerLoc() { return m_PlayerLoc; }
 	const FRotator& GetPlayerRot() { return m_PlayerRot; }
-	const bool GetbPlayerInAir() { return m_bPlayerInAir; }
+	const bool GetPlayerInAir() { return m_bPlayerInAir; }
 
 
 private:
