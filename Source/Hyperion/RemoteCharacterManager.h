@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "HyperionBase/ObservableBase.h"
-#include "RemoteCharacter.h"
 #include "RemoteCharacterManager.generated.h"
 
 /**
@@ -21,10 +20,11 @@ public:
 	URemoteCharacterManager();
 
 	void Replicate(Packet* _pInPack);
-	
+	//virtual void TickComponent(float DeltaTime) override;
+
 private:
 	virtual void OnReplicate(Packet* _pInPack);
 	
 private:
-	TMap<UINT32, ARemoteCharacter*> m_RemoteChars;
+	TArray<int32> m_RemoteCharIdx;
 };

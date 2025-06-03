@@ -3,6 +3,8 @@
 
 #include "RemoteCharacter.h"
 
+#include "RemoteCharacterManager.h"
+
 // Sets default values
 ARemoteCharacter::ARemoteCharacter()
 {
@@ -21,13 +23,6 @@ void ARemoteCharacter::BeginPlay()
 void ARemoteCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-}
-
-// Called to bind functionality to input
-void ARemoteCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
 

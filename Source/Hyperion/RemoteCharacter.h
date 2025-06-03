@@ -7,6 +7,7 @@
 #include "HyperionBase/ObserverBase.h"
 #include "RemoteCharacter.generated.h"
 
+class URemoteCharacterManager;
 UCLASS()
 class HYPERION_API ARemoteCharacter : public ACharacter, public IObserverBase
 {
@@ -23,10 +24,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;	
-
 	virtual void OnNotify_Implementation(UObservableBase* _pInObservable) override;
 
 };

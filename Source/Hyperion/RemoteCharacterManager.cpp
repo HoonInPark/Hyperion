@@ -4,40 +4,36 @@
 #include "RemoteCharacterManager.h"
 
 #include "ServerHyperionLibrary/Packet.h"
+#include "RemoteCharacter.h"
 
 URemoteCharacterManager::URemoteCharacterManager()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 void URemoteCharacterManager::Replicate(Packet* _pInPack)
 {
-	auto pChar = *(m_RemoteChars.Find(_pInPack->GetSessionIdx()));
-	if (!pChar)
+	int32 IdxFound = m_RemoteCharIdx.Find(_pInPack->GetSessionIdx());
+	if (INDEX_NONE == IdxFound)
 	{
 		UWorld* pWorld = GetWorld();
 		check(pWorld);
 
-		FVector SpawnLoc = FVector(
-			_pInPack->GetPosX(),
-			_pInPack->GetPosY(),
-			_pInPack->GetPosZ());
-		FRotator SpawnRot = FRotator(
-			_pInPack->GetRotX(),
-			_pInPack->GetRotY(),
-			_pInPack->GetRotZ());
-
 		auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 			ARemoteCharacter::StaticClass(),
-			SpawnLoc,
-			SpawnRot);
+			FVector(_pInPack->GetPosX(), _pInPack->GetPosY(), _pInPack->GetPosZ()),
+			FRotator());
 		check(pRemoteCharacter);
 
-		m_RemoteChars.Add(_pInPack->GetSessionIdx(), pRemoteCharacter);
+		TScriptInterface<IObserverBase> ObserverInterface;
+		ObserverInterface.SetObject(pRemoteCharacter);
+		ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
+		Subscribe(ObserverInterface);
+
+		m_RemoteCharIdx.Add(_pInPack->GetSessionIdx());
 	}
 
-
-
+	NotifyObservers();
 	OnReplicate(_pInPack);
 }
 

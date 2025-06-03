@@ -118,7 +118,6 @@ void AHyperionCharacter::PossessedBy(AController* NewController)
 	TScriptInterface<IObserverBase> ObserverInterface;
 	ObserverInterface.SetObject(NewController);
 	ObserverInterface.SetInterface(Cast<IObserverBase>(NewController));
-
 	m_pObservable->Subscribe(ObserverInterface);
 }
 
