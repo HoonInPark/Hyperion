@@ -167,21 +167,15 @@ uint32 FClientRunnable_Send::Run()
 		if (!SendPackQ.empty())
 		{
 			pPack = SendPackQ.front();
-
 			Size = pPack->Write(pStart);
-			SendMsg(Size, pStart);
 			SendPackQ.pop();
-
 			m_pClientSock->GetSendPackPool().Return(pPack);
-
-			m_CS.Unlock();
-		}
-		else
-		{
 			m_CS.Unlock();
 
-			continue;
+			SendMsg(Size, pStart);
 		}
+		else 
+			m_CS.Unlock();
 	}
 
 	return 0;

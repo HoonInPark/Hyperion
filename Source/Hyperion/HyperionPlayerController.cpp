@@ -48,7 +48,6 @@ void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObs
 	auto pObservable = CastChecked<UCharacterObservable>(_pInObservable);
 
 	m_CS.Lock();
-	
 	shared_ptr<Packet> pPack = m_pClientSock->GetSendPackPool().Acquire();
 	m_CS.Unlock();
 
