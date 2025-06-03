@@ -15,8 +15,7 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack)
 	auto pChar = *(m_RemoteChars.Find(_pInPack->GetSessionIdx()));
 	if (!pChar)
 	{
-		//if (!HasAuthority()) return; // 서버만 실행
-
+		/*
 		UWorld* pWorld = GetWorld();
 		check(pWorld);
 
@@ -36,6 +35,7 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack)
 		check(pRemoteCharacter);
 
 		m_RemoteChars.Add(_pInPack->GetSessionIdx(), pRemoteCharacter);
+		*/
 	}
 
 
