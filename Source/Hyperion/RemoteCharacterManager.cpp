@@ -15,7 +15,6 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack)
 	auto pChar = *(m_RemoteChars.Find(_pInPack->GetSessionIdx()));
 	if (!pChar)
 	{
-		/*
 		UWorld* pWorld = GetWorld();
 		check(pWorld);
 
@@ -35,7 +34,6 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack)
 		check(pRemoteCharacter);
 
 		m_RemoteChars.Add(_pInPack->GetSessionIdx(), pRemoteCharacter);
-		*/
 	}
 
 
