@@ -88,8 +88,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void PossessedBy(AController* NewController) override;
 
-	FORCEINLINE URemoteCharacterManager* GetRemoteCharMng() const { return m_pRemoteCharMng; }
-
 private:
 	void TimerTick();
 
@@ -97,7 +95,6 @@ private:
 	FTimerHandle m_TimerHandle;
 
 	UCharacterObservable* m_pObservable;
-	URemoteCharacterManager* m_pRemoteCharMng;
 
 	TArray<bool> m_CharStates;
 };

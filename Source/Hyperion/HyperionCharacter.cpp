@@ -41,7 +41,6 @@ AHyperionCharacter::AHyperionCharacter()
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
 	m_pObservable = CreateDefaultSubobject<UCharacterObservable>(TEXT("Observable"));
-	m_pRemoteCharMng = CreateDefaultSubobject<URemoteCharacterManager>(TEXT("RemoteCharacterManager"));
 
 	m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
 }
@@ -101,7 +100,7 @@ void AHyperionCharacter::BeginPlay()
 		m_TimerHandle,
 		this,
 		&AHyperionCharacter::TimerTick,
-		1.0f / 30.0f,     // 30Hz
+		1.f / 30.f,     // 30Hz
 		true);            // 반복 호출
 }
 

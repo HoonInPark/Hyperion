@@ -26,7 +26,5 @@ public:
 	virtual void OnReceive(const UINT32 _InSize) override;
 
 private:
-	URemoteCharacterManager* m_pRemoteCharMng{ nullptr };
-
 	Packet* m_pPack;
 };

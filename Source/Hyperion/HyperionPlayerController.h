@@ -22,6 +22,7 @@ public:
 	AHyperionPlayerController();
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	virtual void OnPossess(APawn* aPawn) override;
 	virtual void OnUnPossess() override;

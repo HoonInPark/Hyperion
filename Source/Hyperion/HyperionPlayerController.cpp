@@ -11,6 +11,8 @@
 
 AHyperionPlayerController::AHyperionPlayerController()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	m_pClientSock = CreateDefaultSubobject<UHyperionClientSocket>(TEXT("HyperionClientSocket"));
 	m_pRemoteCharMng = CreateDefaultSubobject<URemoteCharacterManager>(TEXT("RemoteCharacterManager"));
 }
@@ -22,12 +24,20 @@ void AHyperionPlayerController::BeginPlay()
 	
 }
 
+void AHyperionPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	m_pRemoteCharMng->UpdateData();
+}
+
 void AHyperionPlayerController::OnPossess(APawn* aPawn)
 {
 	Super::OnPossess(aPawn);
 
-	// if statement needed for what pawn class is gonna be possessed
+	// if statement needed for what pawn class is gonna be possessed by for login page
 
+	m_pRemoteCharMng->ActivateReplication();
 
 	if (0 != m_pClientSock->ActivateThreads(aPawn))
 		UE_LOG(LogTemp, Error, TEXT("Failed to initialize client socket threads"));
@@ -39,6 +49,8 @@ void AHyperionPlayerController::OnUnPossess()
 
 	if (0 != m_pClientSock->DeactivateThreads())
 		UE_LOG(LogTemp, Error, TEXT("Failed to deinitialize client socket threads"));
+
+	m_pRemoteCharMng->DeactivateReplication();
 }
 
 void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObservable)

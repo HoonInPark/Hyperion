@@ -11,7 +11,6 @@ int32 UHyperionClientSocket::ActivateThreads(APawn* aPawn)
 {
 	if (AHyperionCharacter* pChar = Cast<AHyperionCharacter>(aPawn))
 	{
-		m_pRemoteCharMng = pChar->GetRemoteCharMng();
 		return Super::ActivateThreads(aPawn);
 	}
 	else

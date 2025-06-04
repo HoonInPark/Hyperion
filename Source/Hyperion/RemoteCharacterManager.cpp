@@ -7,19 +7,31 @@
 
 URemoteCharacterManager::URemoteCharacterManager()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void URemoteCharacterManager::InitializeComponent()
+void URemoteCharacterManager::ActivateReplication()
 {
 	m_pCurPack = new Packet;
 	m_pRecvTaskQ = new TQueue <TaskPair>;
 }
 
-void URemoteCharacterManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void URemoteCharacterManager::DeactivateReplication()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (m_pCurPack)
+	{
+		delete m_pCurPack;
+		m_pCurPack = nullptr;
+	}
+	if (m_pRecvTaskQ)
+	{
+		delete m_pRecvTaskQ;
+		m_pRecvTaskQ = nullptr;
+	}
+}
 
+void URemoteCharacterManager::UpdateData()
+{
 	TaskPair TaskPairToRun;
 	while (m_pRecvTaskQ->Dequeue(TaskPairToRun))
 	{

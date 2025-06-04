@@ -24,8 +24,9 @@ class HYPERION_API URemoteCharacterManager : public UObservableBase
 public:
 	URemoteCharacterManager();
 
-	virtual void InitializeComponent() override;
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void ActivateReplication();
+	void DeactivateReplication();
+	void UpdateData();
 
 	void Replicate(const Packet& _InPack); // CAUTION : called in io thread of cli sock class
 	FORCEINLINE Packet* GetCurPack() { return m_pCurPack; }
