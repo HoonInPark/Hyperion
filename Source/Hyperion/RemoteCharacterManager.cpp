@@ -12,19 +12,19 @@ URemoteCharacterManager::URemoteCharacterManager()
 
 void URemoteCharacterManager::InitializeComponent()
 {
-	//m_pCurPack = new Packet;
+	m_pCurPack = new Packet;
+	m_pRecvTaskQ = new TQueue <TaskPair>;
 }
 
 void URemoteCharacterManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	TPair<TFunction<void()>, Packet> TaskPair;
-
-	while (m_RecvTaskQ.Dequeue(TaskPair))
+	TaskPair TaskPairToRun;
+	while (m_pRecvTaskQ->Dequeue(TaskPairToRun))
 	{
-		m_CurPack = TaskPair.Value;
-		TaskPair.Key;
+		*m_pCurPack = TaskPairToRun.Pack;
+		TaskPairToRun.TaskFunc;
 	}
 }
 
@@ -34,7 +34,7 @@ void URemoteCharacterManager::Replicate(const Packet& _InPack) // CAUTION : call
 	{
 		m_RemoteCharIdx.Add(_InPack.GetSessionIdx());
 
-		m_RecvTaskQ.Enqueue({ [=, this]()
+		m_pRecvTaskQ->Enqueue({ [=, this]()
 			{
 				UWorld* pWorld = GetWorld();
 				check(pWorld);
@@ -56,7 +56,7 @@ void URemoteCharacterManager::Replicate(const Packet& _InPack) // CAUTION : call
 	}
 	else
 	{
-		m_RecvTaskQ.Enqueue({ [this]()
+		m_pRecvTaskQ->Enqueue({ [this]()
 			{
 				NotifyObservers();
 			},

@@ -10,11 +10,16 @@
 /**
  *
  */
-
 UCLASS()
 class HYPERION_API URemoteCharacterManager : public UObservableBase
 {
 	GENERATED_BODY()
+
+	struct TaskPair
+	{
+		TFunction<void()> TaskFunc; 
+		Packet Pack;
+	};
 
 public:
 	URemoteCharacterManager();
@@ -23,11 +28,11 @@ public:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void Replicate(const Packet& _InPack); // CAUTION : called in io thread of cli sock class
-	FORCEINLINE const Packet& GetCurPack() { return m_CurPack; }
+	FORCEINLINE Packet* GetCurPack() { return m_pCurPack; }
 
 private:
 	TArray<int32> m_RemoteCharIdx;
 
-	Packet m_CurPack;
-	TQueue <TPair< TFunction<void()>, Packet> > m_RecvTaskQ;
+	Packet* m_pCurPack{ nullptr };
+	TQueue <TaskPair>* m_pRecvTaskQ{ nullptr };
 };
