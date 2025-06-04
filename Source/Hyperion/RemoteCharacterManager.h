@@ -17,8 +17,8 @@ class HYPERION_API URemoteCharacterManager : public UObservableBase
 
 	struct TaskPair
 	{
-		TFunction<void()> TaskFunc; 
-		Packet Pack;
+		TFunction<void(const Packet& _InTaskPack)> TaskFunc;
+		Packet TaskPack;
 	};
 
 public:

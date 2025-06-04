@@ -35,8 +35,8 @@ void URemoteCharacterManager::UpdateData()
 	TaskPair TaskPairToRun;
 	while (m_pRecvTaskQ->Dequeue(TaskPairToRun))
 	{
-		*m_pCurPack = TaskPairToRun.Pack;
-		TaskPairToRun.TaskFunc;
+		*m_pCurPack = TaskPairToRun.TaskPack;
+		TaskPairToRun.TaskFunc(TaskPairToRun.TaskPack);
 	}
 }
 
@@ -46,18 +46,19 @@ void URemoteCharacterManager::Replicate(const Packet& _InPack) // CAUTION : call
 	{
 		m_RemoteCharIdx.Add(_InPack.GetSessionIdx());
 
-		m_pRecvTaskQ->Enqueue({ [=, this]()
+		m_pRecvTaskQ->Enqueue({
+			[this](const Packet& _InTaskPack)
 			{
 				UWorld* pWorld = GetWorld();
 				check(pWorld);
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 					ARemoteCharacter::StaticClass(),
-					FVector(_InPack.GetPosX(), _InPack.GetPosY(), _InPack.GetPosZ()),
+					FVector(_InTaskPack.GetPosX(), _InTaskPack.GetPosY(), _InTaskPack.GetPosZ()),
 					FRotator());
 				check(pRemoteCharacter);
 
-				pRemoteCharacter->SetSessionIdx(_InPack.GetSessionIdx());
+				pRemoteCharacter->SetSessionIdx(_InTaskPack.GetSessionIdx());
 
 				TScriptInterface<IObserverBase> ObserverInterface;
 				ObserverInterface.SetObject(pRemoteCharacter);
@@ -68,7 +69,8 @@ void URemoteCharacterManager::Replicate(const Packet& _InPack) // CAUTION : call
 	}
 	else
 	{
-		m_pRecvTaskQ->Enqueue({ [this]()
+		m_pRecvTaskQ->Enqueue({
+			[this](const Packet& _InTaskPack)
 			{
 				NotifyObservers();
 			},
