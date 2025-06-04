@@ -71,7 +71,7 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 		auto pOwner = GetOwner();
 		if (auto pController = Cast<AHyperionPlayerController>(pOwner))
 		{
-			pController->GetRemoteCharMng()->Replicate(m_pPack);
+			pController->GetRemoteCharMng()->Replicate(*m_pPack);
 		}
 		else
 		{

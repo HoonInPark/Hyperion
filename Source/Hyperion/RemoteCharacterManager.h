@@ -4,27 +4,30 @@
 
 #include "CoreMinimal.h"
 #include "HyperionBase/ObservableBase.h"
+#include "ServerHyperionLibrary/Packet.h"
 #include "RemoteCharacterManager.generated.h"
 
 /**
- * 
+ *
  */
 
-class Packet;
 UCLASS()
 class HYPERION_API URemoteCharacterManager : public UObservableBase
 {
 	GENERATED_BODY()
-	
+
 public:
 	URemoteCharacterManager();
 
-	void Replicate(Packet* _pInPack);
-	//virtual void TickComponent(float DeltaTime) override;
+	virtual void InitializeComponent() override;
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	void Replicate(const Packet& _InPack); // CAUTION : called in io thread of cli sock class
+	FORCEINLINE const Packet& GetCurPack() { return m_CurPack; }
 
 private:
-	virtual void OnReplicate(Packet* _pInPack);
-	
-private:
 	TArray<int32> m_RemoteCharIdx;
+
+	Packet m_CurPack;
+	TQueue <TPair< TFunction<void()>, Packet> > m_RecvTaskQ;
 };

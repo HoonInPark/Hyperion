@@ -3,7 +3,6 @@
 
 #include "RemoteCharacterManager.h"
 
-#include "ServerHyperionLibrary/Packet.h"
 #include "RemoteCharacter.h"
 
 URemoteCharacterManager::URemoteCharacterManager()
@@ -11,32 +10,56 @@ URemoteCharacterManager::URemoteCharacterManager()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void URemoteCharacterManager::Replicate(Packet* _pInPack)
+void URemoteCharacterManager::InitializeComponent()
 {
-	int32 IdxFound = m_RemoteCharIdx.Find(_pInPack->GetSessionIdx());
-	if (INDEX_NONE == IdxFound)
-	{
-		UWorld* pWorld = GetWorld();
-		check(pWorld);
-
-		auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
-			ARemoteCharacter::StaticClass(),
-			FVector(_pInPack->GetPosX(), _pInPack->GetPosY(), _pInPack->GetPosZ()),
-			FRotator());
-		check(pRemoteCharacter);
-
-		TScriptInterface<IObserverBase> ObserverInterface;
-		ObserverInterface.SetObject(pRemoteCharacter);
-		ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
-		Subscribe(ObserverInterface);
-
-		m_RemoteCharIdx.Add(_pInPack->GetSessionIdx());
-	}
-
-	NotifyObservers();
-	OnReplicate(_pInPack);
+	//m_pCurPack = new Packet;
 }
 
-void URemoteCharacterManager::OnReplicate(Packet* _pInPack)
+void URemoteCharacterManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	TPair<TFunction<void()>, Packet> TaskPair;
+
+	while (m_RecvTaskQ.Dequeue(TaskPair))
+	{
+		m_CurPack = TaskPair.Value;
+		TaskPair.Key;
+	}
+}
+
+void URemoteCharacterManager::Replicate(const Packet& _InPack) // CAUTION : called in io thread
+{
+	if (INDEX_NONE == m_RemoteCharIdx.Find(_InPack.GetSessionIdx()))
+	{
+		m_RemoteCharIdx.Add(_InPack.GetSessionIdx());
+
+		m_RecvTaskQ.Enqueue({ [=, this]()
+			{
+				UWorld* pWorld = GetWorld();
+				check(pWorld);
+
+				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
+					ARemoteCharacter::StaticClass(),
+					FVector(_InPack.GetPosX(), _InPack.GetPosY(), _InPack.GetPosZ()),
+					FRotator());
+				check(pRemoteCharacter);
+
+				pRemoteCharacter->SetSessionIdx(_InPack.GetSessionIdx());
+
+				TScriptInterface<IObserverBase> ObserverInterface;
+				ObserverInterface.SetObject(pRemoteCharacter);
+				ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
+				Subscribe(ObserverInterface);
+			},
+			_InPack });
+	}
+	else
+	{
+		m_RecvTaskQ.Enqueue({ [this]()
+			{
+				NotifyObservers();
+			},
+			_InPack });
+	}
 }

@@ -26,4 +26,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void OnNotify_Implementation(UObservableBase* _pInObservable) override;
 
+public:
+	FORCEINLINE void SetSessionIdx(INT32 _InIdx) { m_SessionIdx = _InIdx; }
+
+private:
+	INT32 m_SessionIdx;
 };

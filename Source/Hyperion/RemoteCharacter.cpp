@@ -28,4 +28,19 @@ void ARemoteCharacter::Tick(float DeltaTime)
 
 void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 {
+	auto pRemoteCharMng = Cast<URemoteCharacterManager>(_pInObservable);
+	check(pRemoteCharMng);
+
+	if (pRemoteCharMng->GetCurPack().GetSessionIdx() == m_SessionIdx)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("msg type: %d || cli idx %d || %f, %f, %f || %f, %f, %f"),
+			static_cast<int>(pRemoteCharMng->GetCurPack().GetMsgType()),
+			pRemoteCharMng->GetCurPack().GetSessionIdx(),
+			pRemoteCharMng->GetCurPack().GetPosX(),
+			pRemoteCharMng->GetCurPack().GetPosY(),
+			pRemoteCharMng->GetCurPack().GetPosZ(),
+			pRemoteCharMng->GetCurPack().GetRotX(),
+			pRemoteCharMng->GetCurPack().GetRotY(),
+			pRemoteCharMng->GetCurPack().GetRotZ());
+	}
 }
