@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "HyperionBase/ObservableBase.h"
 #include "ServerHyperionLibrary/Packet.h"
+#include "ServerHyperionLibrary/ObjPool.h"
 #include "RemoteCharacterManager.generated.h"
 
 /**
@@ -25,7 +26,7 @@ public:
 
 	void Replicate(Packet* _pInPack); // CAUTION : called in io thread of cli sock class
 
-	FORCEINLINE void SetCurPack(const Packet& _InPack) { *m_pCurPack = _InPack; }
+	FORCEINLINE void SetCurPack(Packet* _InPack) { *m_pCurPack = *_InPack; }
 	FORCEINLINE Packet* GetCurPack() { return m_pCurPack; }
 
 public:
@@ -37,4 +38,7 @@ private:
 
 	Packet* m_pCurPack{ nullptr };
 	TQueue <TFunction<void()>> m_RecvTaskQ;
+
+	FCriticalSection m_CS;
+	ObjPool<Packet> m_PackPool;
 };

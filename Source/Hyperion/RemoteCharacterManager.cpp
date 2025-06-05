@@ -4,6 +4,7 @@
 #include "RemoteCharacterManager.h"
 
 #include "RemoteCharacter.h"
+#include "ServerHyperion/Public/ClientSocket.h"
 
 URemoteCharacterManager::URemoteCharacterManager()
 {
@@ -13,6 +14,7 @@ URemoteCharacterManager::URemoteCharacterManager()
 void URemoteCharacterManager::ActivateReplication()
 {
 	m_pCurPack = new Packet;
+	m_PackPool = ObjPool<Packet>(MAX_POOL_SIZE);
 }
 
 void URemoteCharacterManager::DeactivateReplication()
@@ -35,25 +37,38 @@ void URemoteCharacterManager::UpdateData()
 
 void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in io thread
 {
+	m_CS.Lock();
+	shared_ptr<Packet> pPack = m_PackPool.Acquire();
+	m_CS.Unlock();
+
+	if (!pPack)
+		UE_LOG(LogTemp, Error, TEXT("Failed to Acquire while Replicating..."));
+
+	*pPack = *_pInPack;
+
 	if (INDEX_NONE == m_RemoteCharIdx.Find(_pInPack->GetSessionIdx()))
 	{
 		m_RemoteCharIdx.Add(_pInPack->GetSessionIdx());
 
 		m_RecvTaskQ.Enqueue(
-			[this, TaskPackCopied = *_pInPack]() // CAUTION : in TaskPackCopied = *_pInPack, Copy Constructor Called
+			[this, pPack]() mutable // CAUTION : in TaskPackCopied = *_pInPack, Copy Constructor Called
 			{
 				UWorld* pWorld = GetWorld();
 				check(pWorld);
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 					m_RemoteCharClass,
-					FVector(TaskPackCopied.GetPosX(), TaskPackCopied.GetPosY(), TaskPackCopied.GetPosZ()),
+					FVector(pPack->GetPosX(), pPack->GetPosY(), pPack->GetPosZ()),
 					FRotator());
 				check(pRemoteCharacter);
 
-				pRemoteCharacter->SetSessionIdx(TaskPackCopied.GetSessionIdx());
+				pRemoteCharacter->SetSessionIdx(pPack->GetSessionIdx());
 
-				SetCurPack(TaskPackCopied);
+				SetCurPack(pPack.get());
+
+				m_CS.Lock();
+				m_PackPool.Return(pPack);
+				m_CS.Unlock();
 
 				TScriptInterface<IObserverBase> ObserverInterface;
 				ObserverInterface.SetObject(pRemoteCharacter);
@@ -64,9 +79,14 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 	else
 	{
 		m_RecvTaskQ.Enqueue(
-			[this, TaskPackCopied = *_pInPack]()
+			[this, pPack]() mutable
 			{
-				SetCurPack(TaskPackCopied);
+				SetCurPack(pPack.get());
+				
+				m_CS.Lock();
+				m_PackPool.Return(pPack);
+				m_CS.Unlock();
+				
 				NotifyObservers();
 			});
 	}
