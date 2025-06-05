@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "HyperionBase/ObservableBase.h"
 #include "ServerHyperionLibrary/Packet.h"
-#include "ServerHyperionLibrary/ObjPool.h"
 #include "RemoteCharacterManager.generated.h"
 
 /**
  *
  */
+class ARemoteCharacter;
 UCLASS()
 class HYPERION_API URemoteCharacterManager : public UObservableBase
 {
@@ -27,6 +27,10 @@ public:
 
 	FORCEINLINE void SetCurPack(const Packet& _InPack) { *m_pCurPack = _InPack; }
 	FORCEINLINE Packet* GetCurPack() { return m_pCurPack; }
+
+public:
+	UPROPERTY(EditAnywhere, Category = "RemoteCharacter")
+	TSubclassOf<ARemoteCharacter> m_RemoteCharClass;
 
 private:
 	TArray<int32> m_RemoteCharIdx;

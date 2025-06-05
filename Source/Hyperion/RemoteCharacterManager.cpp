@@ -46,7 +46,7 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 				check(pWorld);
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
-					ARemoteCharacter::StaticClass(),
+					m_RemoteCharClass,
 					FVector(TaskPackCopied.GetPosX(), TaskPackCopied.GetPosY(), TaskPackCopied.GetPosZ()),
 					FRotator());
 				check(pRemoteCharacter);

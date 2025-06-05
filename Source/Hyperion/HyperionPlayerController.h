@@ -31,9 +31,12 @@ public:
 
 	FORCEINLINE URemoteCharacterManager* GetRemoteCharMng() const { return m_pRemoteCharMng; }
 
+protected:
+	UPROPERTY(EditAnywhere, Category = "RemoteCharacterManager")
+	URemoteCharacterManager* m_pRemoteCharMng{ nullptr };
+
 private:
 	UHyperionClientSocket* m_pClientSock{ nullptr };
-	URemoteCharacterManager* m_pRemoteCharMng{ nullptr };
 
 	FCriticalSection m_CS;
 };

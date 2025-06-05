@@ -42,13 +42,11 @@ public:
 
 public:
 	Packet();
+	Packet(const Packet& Other); // TODO : must be modified with mem pooling 'cause it dynamically alloc when copy constructor called
+
 	~Packet();
 
-	Packet(const Packet& Other);
-	//Packet(Packet&& Other) noexcept;
-
-	Packet& operator=(const Packet& Other);
-	//Packet& operator=(Packet&& Other) noexcept;
+	Packet& operator=(const Packet& Other); 
 
 	static enum class Header : char
 	{
