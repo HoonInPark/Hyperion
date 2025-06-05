@@ -35,13 +35,12 @@ void URemoteCharacterManager::UpdateData()
 
 void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in io thread
 {
-	Packet TaskPackCopied = *_pInPack;
 	if (INDEX_NONE == m_RemoteCharIdx.Find(_pInPack->GetSessionIdx()))
 	{
 		m_RemoteCharIdx.Add(_pInPack->GetSessionIdx());
 
 		m_RecvTaskQ.Enqueue(
-			[this, TaskPackCopied]()
+			[this, TaskPackCopied = *_pInPack]() // CAUTION : in TaskPackCopied = *_pInPack, Copy Constructor Called
 			{
 				UWorld* pWorld = GetWorld();
 				check(pWorld);
@@ -65,7 +64,7 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 	else
 	{
 		m_RecvTaskQ.Enqueue(
-			[this, TaskPackCopied]()
+			[this, TaskPackCopied = *_pInPack]()
 			{
 				SetCurPack(TaskPackCopied);
 				NotifyObservers();

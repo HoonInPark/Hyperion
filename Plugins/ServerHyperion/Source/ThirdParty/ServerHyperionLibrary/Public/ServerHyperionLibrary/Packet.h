@@ -44,7 +44,7 @@ public:
 	Packet();
 	~Packet();
 
-	//Packet(const Packet& Other);
+	Packet(const Packet& Other);
 	//Packet(Packet&& Other) noexcept;
 
 	Packet& operator=(const Packet& Other);
