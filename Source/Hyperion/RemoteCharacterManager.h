@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "HyperionBase/ObservableBase.h"
 #include "ServerHyperionLibrary/Packet.h"
+#include "ServerHyperionLibrary/ObjPool.h"
 #include "RemoteCharacterManager.generated.h"
 
 /**
@@ -15,12 +16,6 @@ class HYPERION_API URemoteCharacterManager : public UObservableBase
 {
 	GENERATED_BODY()
 
-	struct TaskPair
-	{
-		TFunction<void(const Packet& _InTaskPack)> TaskFunc;
-		Packet TaskPack;
-	};
-
 public:
 	URemoteCharacterManager();
 
@@ -28,12 +23,14 @@ public:
 	void DeactivateReplication();
 	void UpdateData();
 
-	void Replicate(const Packet& _InPack); // CAUTION : called in io thread of cli sock class
+	void Replicate(Packet* _pInPack); // CAUTION : called in io thread of cli sock class
+
+	FORCEINLINE void SetCurPack(const Packet& _InPack) { *m_pCurPack = _InPack; }
 	FORCEINLINE Packet* GetCurPack() { return m_pCurPack; }
 
 private:
 	TArray<int32> m_RemoteCharIdx;
 
 	Packet* m_pCurPack{ nullptr };
-	TQueue <TaskPair>* m_pRecvTaskQ{ nullptr };
+	TQueue <TFunction<void()>> m_RecvTaskQ;
 };

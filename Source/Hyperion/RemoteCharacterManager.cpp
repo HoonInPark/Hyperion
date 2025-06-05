@@ -13,7 +13,6 @@ URemoteCharacterManager::URemoteCharacterManager()
 void URemoteCharacterManager::ActivateReplication()
 {
 	m_pCurPack = new Packet;
-	m_pRecvTaskQ = new TQueue <TaskPair>;
 }
 
 void URemoteCharacterManager::DeactivateReplication()
@@ -23,57 +22,53 @@ void URemoteCharacterManager::DeactivateReplication()
 		delete m_pCurPack;
 		m_pCurPack = nullptr;
 	}
-	if (m_pRecvTaskQ)
-	{
-		delete m_pRecvTaskQ;
-		m_pRecvTaskQ = nullptr;
-	}
 }
 
 void URemoteCharacterManager::UpdateData()
 {
-	TaskPair TaskPairToRun;
-	while (m_pRecvTaskQ->Dequeue(TaskPairToRun))
+	TFunction<void()> Task;
+	while (m_RecvTaskQ.Dequeue(Task))
 	{
-		*m_pCurPack = TaskPairToRun.TaskPack;
-		TaskPairToRun.TaskFunc(TaskPairToRun.TaskPack);
+		Task();
 	}
 }
 
-void URemoteCharacterManager::Replicate(const Packet& _InPack) // CAUTION : called in io thread
+void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in io thread
 {
-	if (INDEX_NONE == m_RemoteCharIdx.Find(_InPack.GetSessionIdx()))
+	Packet TaskPackCopied = *_pInPack;
+	if (INDEX_NONE == m_RemoteCharIdx.Find(_pInPack->GetSessionIdx()))
 	{
-		m_RemoteCharIdx.Add(_InPack.GetSessionIdx());
+		m_RemoteCharIdx.Add(_pInPack->GetSessionIdx());
 
-		m_pRecvTaskQ->Enqueue({
-			[this](const Packet& _InTaskPack)
+		m_RecvTaskQ.Enqueue(
+			[this, TaskPackCopied]()
 			{
 				UWorld* pWorld = GetWorld();
 				check(pWorld);
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 					ARemoteCharacter::StaticClass(),
-					FVector(_InTaskPack.GetPosX(), _InTaskPack.GetPosY(), _InTaskPack.GetPosZ()),
+					FVector(TaskPackCopied.GetPosX(), TaskPackCopied.GetPosY(), TaskPackCopied.GetPosZ()),
 					FRotator());
 				check(pRemoteCharacter);
 
-				pRemoteCharacter->SetSessionIdx(_InTaskPack.GetSessionIdx());
+				pRemoteCharacter->SetSessionIdx(TaskPackCopied.GetSessionIdx());
+
+				SetCurPack(TaskPackCopied);
 
 				TScriptInterface<IObserverBase> ObserverInterface;
 				ObserverInterface.SetObject(pRemoteCharacter);
 				ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
 				Subscribe(ObserverInterface);
-			},
-			_InPack });
+			});
 	}
 	else
 	{
-		m_pRecvTaskQ->Enqueue({
-			[this](const Packet& _InTaskPack)
+		m_RecvTaskQ.Enqueue(
+			[this, TaskPackCopied]()
 			{
+				SetCurPack(TaskPackCopied);
 				NotifyObservers();
-			},
-			_InPack });
+			});
 	}
 }
