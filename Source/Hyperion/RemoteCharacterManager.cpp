@@ -74,6 +74,8 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 				ObserverInterface.SetObject(pRemoteCharacter);
 				ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
 				Subscribe(ObserverInterface);
+
+				NotifyObservers();
 			});
 	}
 	else
