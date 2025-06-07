@@ -21,14 +21,21 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void OnNotify_Implementation(UObservableBase* _pInObservable) override;
 
-public:
 	FORCEINLINE void SetSessionIdx(INT32 _InIdx) { m_SessionIdx = _InIdx; }
 
 private:
+	void SetDestination(float _InDestX, float _InDestY, float _InDestZ);
+
+private:
+	float m_InterpSpeed = 5.0f;
+
+	FVector m_Dest{ FVector() };
+	bool m_bIsMove{ false };
+
 	INT32 m_SessionIdx;
 };
