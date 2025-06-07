@@ -51,7 +51,7 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 		m_RemoteCharIdx.Add(_pInPack->GetSessionIdx());
 
 		m_RecvTaskQ.Enqueue(
-			[this, pPack]() mutable // CAUTION : in TaskPackCopied = *_pInPack, Copy Constructor Called
+			[this, pPack]() mutable
 			{
 				UWorld* pWorld = GetWorld();
 				check(pWorld);

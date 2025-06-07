@@ -122,8 +122,7 @@ void AHyperionCharacter::PossessedBy(AController* NewController)
 
 void AHyperionCharacter::UpdateInitialCharData()
 {
-	StartCharStatus_WASD();
-	StartCharStatus_MOUSE();
+	m_CharStates.Init(true, m_CharStates.Num());
 	
 	m_pObservable->UpdateData(
 		m_CharStates,
@@ -131,8 +130,7 @@ void AHyperionCharacter::UpdateInitialCharData()
 		GetControlRotation(), // if GetActorRotation() is called, not GetControlRotation(), it only returns yaw changes
 		GetCharacterMovement()->IsFalling());
 
-	StopCharStatus_WASD();
-	StopCharStatus_MOUSE();
+	m_CharStates.Init(false, m_CharStates.Num());
 }
 
 void AHyperionCharacter::TimerTick()
