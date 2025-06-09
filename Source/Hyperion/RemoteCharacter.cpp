@@ -82,7 +82,7 @@ void ARemoteCharacter::SetDestination(float _InDestX, float _InDestY, float _InD
 
 void ARemoteCharacter::SetRotation(float _InRotX, float _InRotY, float _InRotZ)
 {
-	m_Rot.Pitch = 0.f;
+	m_Rot.Pitch = /*_InRotX*/ 0.f;
 	m_Rot.Roll = _InRotY;
 	m_Rot.Yaw = _InRotZ;
 
