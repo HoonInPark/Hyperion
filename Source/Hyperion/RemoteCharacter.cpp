@@ -28,11 +28,18 @@ void ARemoteCharacter::Tick(float DeltaTime)
 	if (m_bIsMove)
 	{
 		FVector&& NewLocation = FMath::VInterpTo(GetActorLocation(), m_Dest, DeltaTime, m_InterpSpeed);
-
 		SetActorLocation(NewLocation);
 
-		// 목표 위치에 충분히 도달하면 정지
-		if (FVector::Dist(NewLocation, m_Dest) < 1.f)
+		FRotator CurrentRot = GetActorRotation();
+		FRotator NewRot = FMath::RInterpTo(CurrentRot, m_Rot, DeltaTime, m_InterpSpeed);
+		SetActorRotation(NewRot);
+
+		const bool&& bLocReached = FVector::Dist(NewLocation, m_Dest) < 1.f;
+		const bool&& bRotReached = FMath::Abs((NewRot - m_Rot).GetNormalized().Yaw) < 1.0f
+			&& FMath::Abs((NewRot - m_Rot).GetNormalized().Pitch) < 1.0f
+			&& FMath::Abs((NewRot - m_Rot).GetNormalized().Roll) < 1.0f;
+
+		if (bLocReached && bRotReached)
 		{
 			m_bIsMove = false;
 		}
@@ -46,25 +53,21 @@ void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 
 	if (pRemoteCharMng->GetCurPack()->GetSessionIdx() == m_SessionIdx)
 	{
-		/*
-		UE_LOG(LogTemp, Warning, TEXT("msg type: %d || cli idx %d || %f, %f, %f || %f, %f, %f"),
-			static_cast<int>(pRemoteCharMng->GetCurPack()->GetMsgType()),
-			pRemoteCharMng->GetCurPack()->GetSessionIdx(),
-			pRemoteCharMng->GetCurPack()->GetPosX(),
-			pRemoteCharMng->GetCurPack()->GetPosY(),
-			pRemoteCharMng->GetCurPack()->GetPosZ(),
-			pRemoteCharMng->GetCurPack()->GetRotX(),
-			pRemoteCharMng->GetCurPack()->GetRotY(),
-			pRemoteCharMng->GetCurPack()->GetRotZ());
-		*/
-
-		if (!pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::POS_X)])
-			return;
-
-		SetDestination(
-			pRemoteCharMng->GetCurPack()->GetPosX(),
-			pRemoteCharMng->GetCurPack()->GetPosY(),
-			pRemoteCharMng->GetCurPack()->GetPosZ());
+		if (pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::POS_X)])
+		{
+			SetDestination(
+				pRemoteCharMng->GetCurPack()->GetPosX(),
+				pRemoteCharMng->GetCurPack()->GetPosY(),
+				pRemoteCharMng->GetCurPack()->GetPosZ());
+		}
+		
+		if (pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::ROT_X)])
+		{
+			SetRotation(
+				pRemoteCharMng->GetCurPack()->GetRotX(),
+				pRemoteCharMng->GetCurPack()->GetRotY(),
+				pRemoteCharMng->GetCurPack()->GetRotZ());
+		}
 	}
 }
 
@@ -73,6 +76,15 @@ void ARemoteCharacter::SetDestination(float _InDestX, float _InDestY, float _InD
 	m_Dest.X = _InDestX;
 	m_Dest.Y = _InDestY;
 	m_Dest.Z = _InDestZ;
+
+	m_bIsMove = true;
+}
+
+void ARemoteCharacter::SetRotation(float _InRotX, float _InRotY, float _InRotZ)
+{
+	m_Rot.Pitch = 0.f;
+	m_Rot.Roll = _InRotY;
+	m_Rot.Yaw = _InRotZ;
 
 	m_bIsMove = true;
 }

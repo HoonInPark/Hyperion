@@ -30,6 +30,7 @@ public:
 
 private:
 	void SetDestination(float _InDestX, float _InDestY, float _InDestZ);
+	void SetRotation(float _InRotX, float _InRotY, float _InRotZ);
 
 private:
 	FCriticalSection m_CS;
@@ -37,6 +38,7 @@ private:
 	float m_InterpSpeed = 5.0f;
 
 	FVector m_Dest{ FVector() };
+	FRotator m_Rot{ FRotator() };
 	bool m_bIsMove{ false };
 
 	INT32 m_SessionIdx;
