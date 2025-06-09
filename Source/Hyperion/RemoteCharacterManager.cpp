@@ -55,11 +55,15 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 			{
 				UWorld* pWorld = GetWorld();
 				//check(pWorld);
+				
+				FActorSpawnParameters SpawnParam;
+				SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 					m_RemoteCharClass,
 					FVector(pPack->GetPosX(), pPack->GetPosY(), pPack->GetPosZ()),
-					FRotator());
+					FRotator(),
+					SpawnParam);
 				//check(pRemoteCharacter);
 
 				pRemoteCharacter->SetSessionIdx(pPack->GetSessionIdx());

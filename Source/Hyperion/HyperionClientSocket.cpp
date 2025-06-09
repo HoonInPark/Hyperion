@@ -54,15 +54,15 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 			SetSessionIdx(m_pPack->GetSessionIdx());
 			//check(SetSessionIdx(m_pPack->GetSessionIdx()));
 		}
+		else
+		{
+			// send initial pos to be spawned in other cli's world
+			auto pHyperionPlayerController = Cast<AHyperionPlayerController>(GetOwner());
+			auto pPawn = pHyperionPlayerController->GetPawn();
+			auto pHyperionChar = Cast<AHyperionCharacter>(pPawn);
 
-		// send initial pos to be spawned in other cli's world
-		auto pHyperionPlayerController = Cast<AHyperionPlayerController>(GetOwner());
-		//check(pHyperionPlayerController);
-		auto pPawn = pHyperionPlayerController->GetPawn();
-		auto pHyperionChar = Cast<AHyperionCharacter>(pPawn);
-		//check(pHyperionChar);
-
-		pHyperionChar->UpdateInitialCharData();
+			pHyperionChar->UpdateInitialCharData();
+		}
 
 		break;
 	}
