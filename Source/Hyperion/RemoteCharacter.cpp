@@ -58,6 +58,9 @@ void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 			pRemoteCharMng->GetCurPack()->GetRotZ());
 		*/
 
+		if (!pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::POS_X)])
+			return;
+
 		SetDestination(
 			pRemoteCharMng->GetCurPack()->GetPosX(),
 			pRemoteCharMng->GetCurPack()->GetPosY(),

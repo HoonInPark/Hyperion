@@ -32,6 +32,8 @@ private:
 	void SetDestination(float _InDestX, float _InDestY, float _InDestZ);
 
 private:
+	FCriticalSection m_CS;
+
 	float m_InterpSpeed = 5.0f;
 
 	FVector m_Dest{ FVector() };

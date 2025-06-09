@@ -14,7 +14,7 @@ URemoteCharacterManager::URemoteCharacterManager()
 void URemoteCharacterManager::ActivateReplication()
 {
 	m_pCurPack = new Packet;
-	m_PackPool = ObjPool<Packet>(MAX_POOL_SIZE);
+	m_PackPool = ObjPool<Packet>(MAX_POOL_SIZE * 5);
 }
 
 void URemoteCharacterManager::DeactivateReplication()
@@ -42,7 +42,10 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 	m_CS.Unlock();
 
 	if (!pPack)
+	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to Acquire while Replicating..."));
+		return;
+	}
 
 	*pPack = *_pInPack;
 

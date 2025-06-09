@@ -52,7 +52,6 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 		if (!IsSessionIdxSet())
 		{
 			SetSessionIdx(m_pPack->GetSessionIdx());
-			//check(SetSessionIdx(m_pPack->GetSessionIdx()));
 		}
 		else
 		{

@@ -55,8 +55,12 @@ public:
 		return true;
 	}
 
-	FORCEINLINE UINT32 GetSessionIdx() const { return m_SessionIdx; }
-	FORCEINLINE bool IsSessionIdxSet() const { return m_bIsSessionIdxSet; }
+	bool SendIO();
+	bool BindRecv();
+
+	virtual void OnConnect() {}
+	virtual void OnClose() {}
+	virtual void OnReceive(const UINT32 _InSize) {}
 
 	FORCEINLINE ObjPool<Packet>& GetSendPackPool() { return m_SendPackPool; }
 	FORCEINLINE queue <shared_ptr< Packet >>& GetSendPackQ() { return m_SendPackQ; }
@@ -64,12 +68,8 @@ public:
 	FORCEINLINE SOCKET& GetSock() { return m_Sock; }
 	FORCEINLINE char* GetRecvBuff() { return m_RecvBuff; }
 
-	bool SendIO();
-	bool BindRecv();
-
-	virtual void OnConnect() {}
-	virtual void OnClose() {}
-	virtual void OnReceive(const UINT32 _InSize) {}
+	FORCEINLINE const UINT32 GetSessionIdx() { return m_SessionIdx; }
+	FORCEINLINE bool IsSessionIdxSet() const { return m_bIsSessionIdxSet; }
 
 protected:
 	FORCEINLINE bool SetSessionIdx(const UINT32 _InSessionIdx) 
