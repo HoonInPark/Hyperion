@@ -54,13 +54,13 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 			[this, pPack]() mutable
 			{
 				UWorld* pWorld = GetWorld();
-				check(pWorld);
+				//check(pWorld);
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 					m_RemoteCharClass,
 					FVector(pPack->GetPosX(), pPack->GetPosY(), pPack->GetPosZ()),
 					FRotator());
-				check(pRemoteCharacter);
+				//check(pRemoteCharacter);
 
 				pRemoteCharacter->SetSessionIdx(pPack->GetSessionIdx());
 

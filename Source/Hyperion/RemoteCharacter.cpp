@@ -42,7 +42,7 @@ void ARemoteCharacter::Tick(float DeltaTime)
 void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 {
 	auto pRemoteCharMng = Cast<URemoteCharacterManager>(_pInObservable);
-	check(pRemoteCharMng);
+	//check(pRemoteCharMng);
 
 	if (pRemoteCharMng->GetCurPack()->GetSessionIdx() == m_SessionIdx)
 	{

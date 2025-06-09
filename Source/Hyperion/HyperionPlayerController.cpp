@@ -65,7 +65,7 @@ void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObs
 
 	if (!pPack)
 	{
-		//UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
+		UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
 		return;
 	}
 
