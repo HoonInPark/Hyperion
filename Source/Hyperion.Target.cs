@@ -13,5 +13,6 @@ public class HyperionTarget : TargetRules
 		ExtraModuleNames.Add("Hyperion");
 		ExtraModuleNames.Add("HyperionBase");
 		ExtraModuleNames.Add("HyperionUI");
+		ExtraModuleNames.Add("HyperionAnim");
 	}
 }

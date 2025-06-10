@@ -30,6 +30,14 @@
 				"Engine",
 				"HyperionBase"
 			]
+		},
+		{
+			"Name": "HyperionAnim",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+			]
 		}
 	],
 	"Plugins": [
