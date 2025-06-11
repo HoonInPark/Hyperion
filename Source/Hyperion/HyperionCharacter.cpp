@@ -15,6 +15,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "CharMovComp.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -41,6 +42,7 @@ AHyperionCharacter::AHyperionCharacter()
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
 	m_pObservable = CreateDefaultSubobject<UCharacterObservable>(TEXT("Observable"));
+	m_CharMovComp = CreateDefaultSubobject<UCharMovComp>(TEXT("CharMovComop"));
 
 	m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
 }

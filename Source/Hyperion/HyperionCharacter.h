@@ -15,6 +15,7 @@ class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
 class URemoteCharacterManager;
+class UCharMovComp;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -93,11 +94,14 @@ public:
 private:
 	void TimerTick();
 
+protected:
+	/** First person movement */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UCharMovComp* m_CharMovComp;
+
 private:
 	FTimerHandle m_TimerHandle;
-
 	UCharacterObservable* m_pObservable;
-
 	TArray<bool> m_CharStates;
 };
 

@@ -4,6 +4,7 @@
 #include "RemoteCharacter.h"
 
 #include "RemoteCharacterManager.h"
+#include "RemoteCharMovComp.h"
 #include "HyperionAnim/RemoteCharAnimInst.h"
 #include "ServerHyperionLibrary/Packet.h"
 
@@ -13,6 +14,7 @@ ARemoteCharacter::ARemoteCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	m_RemoteCharMovComp = CreateDefaultSubobject<URemoteCharMovComp>(TEXT("RemoteCharMovComp"));
 }
 
 // Called when the game starts or when spawned
