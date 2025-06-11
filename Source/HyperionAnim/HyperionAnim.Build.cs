@@ -11,7 +11,8 @@ public class HyperionAnim : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"CoreUObject",
-			"Engine"
-		});
+			"Engine",
+            "Hyperion"
+        });
 	}
 }

@@ -4,6 +4,7 @@
 #include "RemoteCharacter.h"
 
 #include "RemoteCharacterManager.h"
+#include "HyperionAnim/RemoteCharAnimInst.h"
 #include "ServerHyperionLibrary/Packet.h"
 
 // Sets default values
@@ -44,6 +45,11 @@ void ARemoteCharacter::Tick(float DeltaTime)
 			m_bIsMove = false;
 		}
 	}
+
+	//if (auto pAnimInst = Cast<URemoteCharAnimInst>(GetMesh()->GetAnimInstance()))
+	//{
+	//	pAnimInst->SetCurSpeed(GetVelocity().Size());
+	//}
 }
 
 void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
