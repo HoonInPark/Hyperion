@@ -12,6 +12,7 @@ ARemoteCharacter::ARemoteCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
 }
 
 // Called when the game starts or when spawned
@@ -36,9 +37,9 @@ void ARemoteCharacter::Tick(float DeltaTime)
 		SetActorRotation(NewRot);
 
 		const bool&& bLocReached = FVector::Dist(NewLocation, m_Dest) < 1.f;
-		const bool&& bRotReached = FMath::Abs((NewRot - m_Rot).GetNormalized().Yaw) < 1.0f
-			&& FMath::Abs((NewRot - m_Rot).GetNormalized().Pitch) < 1.0f
-			&& FMath::Abs((NewRot - m_Rot).GetNormalized().Roll) < 1.0f;
+		const bool&& bRotReached = FMath::Abs((NewRot - m_Rot).GetNormalized().Yaw) < 1.f
+			&& FMath::Abs((NewRot - m_Rot).GetNormalized().Pitch) < 1.f
+			&& FMath::Abs((NewRot - m_Rot).GetNormalized().Roll) < 1.f;
 
 		if (bLocReached && bRotReached)
 		{
@@ -46,10 +47,10 @@ void ARemoteCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	//if (auto pAnimInst = Cast<URemoteCharAnimInst>(GetMesh()->GetAnimInstance()))
-	//{
-	//	pAnimInst->SetCurSpeed(GetVelocity().Size());
-	//}
+	if (auto pAnimInst = Cast<URemoteCharAnimInst>(GetMesh()->GetAnimInstance()))
+	{
+		pAnimInst->SetCurSpeed(GetVelocity().Size());
+	}
 }
 
 void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)

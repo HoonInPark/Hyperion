@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "EngineMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "Hyperion/RemoteCharacter.h"
 #include "RemoteCharAnimInst.generated.h"

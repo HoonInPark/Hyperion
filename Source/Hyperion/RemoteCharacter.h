@@ -33,10 +33,9 @@ private:
 	void SetRotation(float _InRotX, float _InRotY, float _InRotZ);
 
 private:
-	FCriticalSection m_CS;
-
 	float m_InterpSpeed = 5.0f;
 
+	// replicated data...
 	FVector m_Dest{ FVector() };
 	FRotator m_Rot{ FRotator() };
 	bool m_bIsMove{ false };
