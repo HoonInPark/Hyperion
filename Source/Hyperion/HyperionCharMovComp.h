@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "CharMovCompBase.generated.h"
+#include "HyperionCharMovComp.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class HYPERIONBASE_API UCharMovCompBase : public UCharacterMovementComponent
+class HYPERION_API UHyperionCharMovComp : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
 	

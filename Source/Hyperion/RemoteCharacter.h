@@ -7,7 +7,6 @@
 #include "HyperionBase/ObserverBase.h"
 #include "RemoteCharacter.generated.h"
 
-class URemoteCharMovComp;
 class URemoteCharacterManager;
 UCLASS()
 class HYPERION_API ARemoteCharacter : public ACharacter, public IObserverBase
@@ -32,9 +31,6 @@ public:
 private:
 	void SetDestination(float _InDestX, float _InDestY, float _InDestZ);
 	void SetRotation(float _InRotX, float _InRotY, float _InRotZ);
-
-protected:
-	URemoteCharMovComp* m_RemoteCharMovComp;
 
 private:
 	float m_InterpSpeed = 5.0f;

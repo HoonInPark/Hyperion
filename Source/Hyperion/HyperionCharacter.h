@@ -15,7 +15,7 @@ class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
 class URemoteCharacterManager;
-class UCharMovComp;
+class UHyperionCharMovComp;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -97,7 +97,7 @@ private:
 protected:
 	/** First person movement */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UCharMovComp* m_CharMovComp;
+	UHyperionCharMovComp* m_CharMovComp;
 
 private:
 	FTimerHandle m_TimerHandle;
