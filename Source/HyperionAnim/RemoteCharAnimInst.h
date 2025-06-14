@@ -24,11 +24,7 @@ private:
 	FORCEINLINE ARemoteCharacter* GetRemoteCharOwningThis()
 	{
 		auto pPawn = TryGetPawnOwner();
-		if (!pPawn)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to Get Pawn in RemoteCharAnimInst class tick"));
-			return nullptr;
-		}
+		check(pPawn);
 
 		if (auto pRemoteChar = Cast<ARemoteCharacter>(pPawn))
 		{

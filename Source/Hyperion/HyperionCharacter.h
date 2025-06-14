@@ -94,11 +94,6 @@ public:
 private:
 	void TimerTick();
 
-protected:
-	/** First person movement */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UHyperionCharMovComp* m_CharMovComp;
-
 private:
 	FTimerHandle m_TimerHandle;
 	UCharacterObservable* m_pObservable;

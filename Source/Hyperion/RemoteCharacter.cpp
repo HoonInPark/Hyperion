@@ -19,6 +19,7 @@ void ARemoteCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	m_PrevTickPos = GetActorLocation();
 }
 
 // Called every frame
@@ -45,26 +46,28 @@ void ARemoteCharacter::Tick(float DeltaTime)
 			m_bIsMove = false;
 		}
 	}
-
-	if (auto pAnimInst = Cast<URemoteCharAnimInst>(GetMesh()->GetAnimInstance()))
-	{
-		pAnimInst->SetCurSpeed(GetVelocity().Size());
-	}
 }
 
 void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 {
 	auto pRemoteCharMng = Cast<URemoteCharacterManager>(_pInObservable);
-	//check(pRemoteCharMng);
+	FVector CurVel;
 
 	if (pRemoteCharMng->GetCurPack()->GetSessionIdx() == m_SessionIdx)
 	{
 		if (pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::POS_X)])
 		{
-			SetDestination(
-				pRemoteCharMng->GetCurPack()->GetPosX(),
-				pRemoteCharMng->GetCurPack()->GetPosY(),
-				pRemoteCharMng->GetCurPack()->GetPosZ());
+			float&& PosX = pRemoteCharMng->GetCurPack()->GetPosX();
+			float&& PosY = pRemoteCharMng->GetCurPack()->GetPosY();
+			float&& PosZ = pRemoteCharMng->GetCurPack()->GetPosZ();
+
+			SetDestination(PosX, PosY, PosZ);
+
+			CurVel = m_PrevTickPos - FVector(PosX, PosY, PosZ);
+		}
+		else
+		{
+			CurVel = FVector();
 		}
 		
 		if (pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::ROT_X)])
@@ -74,6 +77,11 @@ void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 				pRemoteCharMng->GetCurPack()->GetRotY(),
 				pRemoteCharMng->GetCurPack()->GetRotZ());
 		}
+
+		// anim area
+		auto pAnimInst = Cast<URemoteCharAnimInst>(GetMesh()->GetAnimInstance());
+		check(pAnimInst);
+		pAnimInst->SetCurSpeed(CurVel.Size());
 	}
 }
 

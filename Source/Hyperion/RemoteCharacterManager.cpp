@@ -57,7 +57,6 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 			[this, pPack]() mutable
 			{
 				UWorld* pWorld = GetWorld();
-				//check(pWorld);
 				
 				FActorSpawnParameters SpawnParam;
 				SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -67,7 +66,6 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 					FVector(pPack->GetPosX(), pPack->GetPosY(), pPack->GetPosZ()),
 					FRotator(),
 					SpawnParam);
-				//check(pRemoteCharacter);
 
 				pRemoteCharacter->SetSessionIdx(pPack->GetSessionIdx());
 

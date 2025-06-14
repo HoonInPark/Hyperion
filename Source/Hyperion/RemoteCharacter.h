@@ -40,5 +40,7 @@ private:
 	FRotator m_Rot{ FRotator() };
 	bool m_bIsMove{ false };
 
+	FVector m_PrevTickPos;
+
 	INT32 m_SessionIdx;
 };

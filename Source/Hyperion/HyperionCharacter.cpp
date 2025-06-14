@@ -41,8 +41,6 @@ AHyperionCharacter::AHyperionCharacter()
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-	m_CharMovComp = CreateDefaultSubobject<UHyperionCharMovComp>(TEXT("CharMovComp"));
-
 	m_pObservable = CreateDefaultSubobject<UCharacterObservable>(TEXT("Observable"));
 	m_CharStates.Init(false, static_cast<int32>(ECharStatus::E_MAX));
 }

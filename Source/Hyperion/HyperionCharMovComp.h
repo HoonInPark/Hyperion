@@ -14,7 +14,7 @@ class HYPERION_API UHyperionCharMovComp : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
 	
-	
+
 	
 	
 };
