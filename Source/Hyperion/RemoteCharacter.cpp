@@ -51,11 +51,13 @@ void ARemoteCharacter::Tick(float DeltaTime)
 void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 {
 	auto pRemoteCharMng = Cast<URemoteCharacterManager>(_pInObservable);
-	FVector CurVel;
 
 	if (pRemoteCharMng->GetCurPack()->GetSessionIdx() == m_SessionIdx)
 	{
-		if (pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::POS_X)])
+		FVector CurVel;
+		const vector<bool>& PackHeader = pRemoteCharMng->GetCurPack()->GetHeader();
+
+		if (PackHeader[static_cast<int>(Packet::Header::POS_X)])
 		{
 			float&& PosX = pRemoteCharMng->GetCurPack()->GetPosX();
 			float&& PosY = pRemoteCharMng->GetCurPack()->GetPosY();
@@ -69,8 +71,19 @@ void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 		{
 			CurVel = FVector();
 		}
+
+		/*
+		if (PackHeader[static_cast<int>(Packet::Header::IS_FALLING)])
+		{
+			float&& PosX = pRemoteCharMng->GetCurPack()->GetPosX();
+			float&& PosY = pRemoteCharMng->GetCurPack()->GetPosY();
+			float&& PosZ = pRemoteCharMng->GetCurPack()->GetPosZ();
+
+			SetDestination(PosX, PosY, PosZ);
+		}
+		*/
 		
-		if (pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::ROT_X)])
+		if (PackHeader[static_cast<int>(Packet::Header::ROT_X)])
 		{
 			SetRotation(
 				pRemoteCharMng->GetCurPack()->GetRotX(),
@@ -78,10 +91,11 @@ void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 				pRemoteCharMng->GetCurPack()->GetRotZ());
 		}
 
+		//////////////////////////////////////////////////////////////////////////
 		// anim area
 		auto pAnimInst = Cast<URemoteCharAnimInst>(GetMesh()->GetAnimInstance());
 		check(pAnimInst);
-		pAnimInst->SetCurSpeed(CurVel.Size());
+		pAnimInst->SetCurVel(CurVel);
 	}
 }
 

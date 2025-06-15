@@ -100,8 +100,8 @@ void AHyperionCharacter::BeginPlay()
 		m_TimerHandle,
 		this,
 		&AHyperionCharacter::TimerTick,
-		1.f / 30.f,     // 30Hz
-		true);            // 반복 호출
+		1.f / 30.f,
+		true);
 }
 
 // in engine loop, rhi funcs called after this tick func returned

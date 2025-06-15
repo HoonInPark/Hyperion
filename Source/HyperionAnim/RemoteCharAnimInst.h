@@ -20,6 +20,7 @@ protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	
+	/*
 private:
 	FORCEINLINE ARemoteCharacter* GetRemoteCharOwningThis()
 	{
@@ -33,13 +34,23 @@ private:
 
 		return nullptr;
 	}
+	*/
 
 public:
-	FORCEINLINE void SetCurSpeed(float _InSpeed) { m_CurSpeed = _InSpeed; }
+	FORCEINLINE void SetCurVel(FVector _InVec) 
+	{
+		m_CurVel = _InVec;
+		m_CurSpeed = _InVec.Size();
+	}
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* m_MtgSpawn;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FVector m_CurVel{ FVector() };
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	float m_CurSpeed{ 0.f };
+	//UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	//bool m_bIsJump{ false };
 };
