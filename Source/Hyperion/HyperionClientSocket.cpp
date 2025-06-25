@@ -91,6 +91,20 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 
 		break;
 	}
+	case MsgType::MSG_CLOSE:
+	{
+		auto pOwner = GetOwner();
+		if (auto pController = Cast<AHyperionPlayerController>(pOwner))
+		{
+			pController->GetRemoteCharMng()->DestroyReplicant(m_pPack);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to cast Owner to AHyperionPlayerController"));
+		}
+
+		break;
+	}
 	default:
 		break;
 	}

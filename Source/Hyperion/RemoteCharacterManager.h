@@ -25,6 +25,7 @@ public:
 	void UpdateData();
 
 	void Replicate(Packet* _pInPack); // CAUTION : called in io thread of cli sock class
+	void DestroyReplicant(Packet* _pInPack);
 
 	FORCEINLINE void SetCurPack(Packet* _InPack) { *m_pCurPack = *_InPack; }
 	FORCEINLINE Packet* GetCurPack() { return m_pCurPack; }
@@ -34,7 +35,7 @@ public:
 	TSubclassOf<ARemoteCharacter> m_RemoteCharClass;
 
 private:
-	TArray<int32> m_RemoteCharIdx;
+	TMap<int32, TScriptInterface<IObserverBase>> m_RemoteCharIdx;
 
 	Packet* m_pCurPack{ nullptr };
 	TQueue <TFunction<void()>> m_RecvTaskQ;
