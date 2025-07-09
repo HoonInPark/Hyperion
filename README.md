@@ -6,7 +6,6 @@ Project Hyperion에 오신 것을 환영합니다.
 
 - 제작 기간 : 2025. 4. ~ 2025. 6.
 - Client : Unreal 5.5
-- Server : C++ IOCP Server
 
 시연 영상
 ----
