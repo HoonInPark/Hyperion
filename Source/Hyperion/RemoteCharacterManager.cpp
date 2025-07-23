@@ -18,6 +18,7 @@ URemoteCharacterManager::URemoteCharacterManager()
 void URemoteCharacterManager::ActivateReplication()
 {
 	m_pCurPack = new Packet;
+	//m_RecvTaskQ = TCircularQueue<TFunction<void()>>(12);
 	m_PackPool = ObjPool<Packet>(MAX_POOL_SIZE * 5);
 }
 
@@ -62,7 +63,8 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 				UWorld* pWorld = GetWorld();
 				
 				FActorSpawnParameters SpawnParam;
-				SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				SpawnParam.SpawnCollisionHandlingOverride = 
+					ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 					m_RemoteCharClass,

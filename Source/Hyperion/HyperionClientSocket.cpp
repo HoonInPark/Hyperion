@@ -67,18 +67,6 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 	}
 	case MsgType::MSG_GAME:
 	{
-		/*
-		UE_LOG(LogTemp, Warning, TEXT("msg type: %d || cli idx %d || %f, %f, %f || %f, %f, %f"), 
-			static_cast<int>(m_pPack->GetMsgType()),
-			m_pPack->GetSessionIdx(),
-			m_pPack->GetPosX(),
-			m_pPack->GetPosY(),
-			m_pPack->GetPosZ(),
-			m_pPack->GetRotX(),
-			m_pPack->GetRotY(),
-			m_pPack->GetRotZ());
-		*/
-
 		auto pOwner = GetOwner();
 		if (auto pController = Cast<AHyperionPlayerController>(pOwner))
 		{

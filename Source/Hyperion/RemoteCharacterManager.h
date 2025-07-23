@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "EngineMinimal.h"
 #include "HyperionBase/ObservableBase.h"
 #include "ServerHyperionLibrary/Packet.h"
 #include "ServerHyperionLibrary/ObjPool.h"

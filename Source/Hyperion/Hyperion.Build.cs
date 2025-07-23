@@ -18,7 +18,7 @@ public class Hyperion : ModuleRules
             "HyperionBase",
             "HyperionUI",
             "ServerHyperion",
-            "ServerHyperionLibrary"
+            "ServerHyperionLibrary",
         });
     }
 }

@@ -9,6 +9,7 @@
 #include "HyperionUI/UIController.h"
 #include "HyperionUI/UIModel.h"
 #include "HyperionUI/UIViewer.h"
+#include "GameFramework/GameUserSettings.h"
 
 AHyperionGameMode::AHyperionGameMode()
 	: Super()
@@ -30,5 +31,9 @@ void AHyperionGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	UGameUserSettings* Settings = GEngine->GetGameUserSettings();
 
+	Settings->SetFullscreenMode(EWindowMode::Windowed);
+	Settings->SetScreenResolution(FIntPoint(1280, 720));
+	Settings->ApplySettings(false);
 }

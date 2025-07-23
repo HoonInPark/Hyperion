@@ -8,6 +8,7 @@
 #include "HyperionClientSocket.h" 
 #include "ServerHyperionLibrary/Packet.h"
 #include "RemoteCharacterManager.h"
+#include "GameFramework/HUD.h"
 
 AHyperionPlayerController::AHyperionPlayerController()
 {
