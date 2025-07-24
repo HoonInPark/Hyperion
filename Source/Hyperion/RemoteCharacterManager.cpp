@@ -20,6 +20,8 @@ void URemoteCharacterManager::ActivateReplication()
 	m_pCurPack = new Packet;
 	//m_RecvTaskQ = TCircularQueue<TFunction<void()>>(12);
 	m_PackPool = ObjPool<Packet>(MAX_POOL_SIZE * 5);
+
+
 }
 
 void URemoteCharacterManager::DeactivateReplication()
@@ -106,4 +108,28 @@ void URemoteCharacterManager::DestroyReplicant(Packet* _pInPack)
 			auto pRemoteChar = Cast<ARemoteCharacter>(pObserver->GetObject());
 			pRemoteChar->Destroy();
 		});
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+FReplicationRunnable::FReplicationRunnable()
+{
+}
+
+FReplicationRunnable::~FReplicationRunnable()
+{
+}
+
+bool FReplicationRunnable::Init()
+{
+	return false;
+}
+
+uint32 FReplicationRunnable::Run()
+{
+	return uint32();
+}
+
+void FReplicationRunnable::Stop()
+{
 }

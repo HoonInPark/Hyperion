@@ -35,7 +35,7 @@ class SERVERHYPERION_API UClientSocket : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UClientSocket();
-	~UClientSocket();
+	virtual ~UClientSocket() override;
 
 	virtual int32 ActivateThreads(APawn* aPawn);
 	virtual int32 DeactivateThreads();
@@ -109,7 +109,7 @@ public:
 		UClientSocket*							_pInClientSock,
 		queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ,
 		ObjPool<stOverlappedEx>&				_InSendDataPool);
-	~FClientRunnable_Send();
+	virtual ~FClientRunnable_Send() override;
 
 	virtual bool Init() override;
 	virtual uint32 Run() override;
@@ -149,7 +149,7 @@ public:
 		HANDLE									_InIocpHandle,
 		queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ, 
 		ObjPool<stOverlappedEx>&				_InSendDataPool);
-	~FClientRunnable_IO();
+	virtual ~FClientRunnable_IO() override;
 
 	virtual bool Init() override;
 	virtual uint32 Run() override;

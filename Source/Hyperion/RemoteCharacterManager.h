@@ -12,6 +12,7 @@
  *
  */
 class ARemoteCharacter;
+class FReplicationRunnable;
 UCLASS()
 class HYPERION_API URemoteCharacterManager : public UObservableBase
 {
@@ -35,6 +36,8 @@ public:
 	TSubclassOf<ARemoteCharacter> m_RemoteCharClass;
 
 private:
+	TArray<FReplicationRunnable*> m_ReplicationRunnables;
+
 	TMap<int32, TScriptInterface<IObserverBase>> m_RemoteCharIdx;
 
 	Packet* m_pCurPack{ nullptr };
@@ -42,4 +45,18 @@ private:
 
 	FCriticalSection m_CS;
 	ObjPool<Packet> m_PackPool;
+};
+
+//////////////////////////////////////////////////////////////////////////
+
+class HYPERION_API FReplicationRunnable : FRunnable
+{
+public:
+	FReplicationRunnable();
+	virtual ~FReplicationRunnable() override;
+
+	virtual bool Init() override;
+	virtual uint32 Run() override;
+	virtual void Stop() override;
+	//virtual void Exit() override;
 };
