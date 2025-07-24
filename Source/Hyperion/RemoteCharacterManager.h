@@ -59,4 +59,13 @@ public:
 	virtual uint32 Run() override;
 	virtual void Stop() override;
 	//virtual void Exit() override;
+
+	FORCEINLINE bool EnqueueTask(TFunction<void()> _InTask)
+	{ 
+		return m_TaskQ.Enqueue(_InTask); 
+	}
+
+private:
+	FRunnableThread* m_pThread{ nullptr };
+	TCircularQueue<TFunction<void()>> m_TaskQ;
 };

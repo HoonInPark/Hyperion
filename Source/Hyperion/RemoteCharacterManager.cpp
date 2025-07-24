@@ -21,7 +21,11 @@ void URemoteCharacterManager::ActivateReplication()
 	//m_RecvTaskQ = TCircularQueue<TFunction<void()>>(12);
 	m_PackPool = ObjPool<Packet>(MAX_POOL_SIZE * 5);
 
-
+	int32 NumLogicalCores = FPlatformMisc::NumberOfCoresIncludingHyperthreads();
+	for (int32 i = 0; i < NumLogicalCores - 3; i++)
+	{
+		m_ReplicationRunnables.Add(new FReplicationRunnable);
+	}
 }
 
 void URemoteCharacterManager::DeactivateReplication()
@@ -31,6 +35,12 @@ void URemoteCharacterManager::DeactivateReplication()
 		delete m_pCurPack;
 		m_pCurPack = nullptr;
 	}
+
+	for (auto ReplicationRunnable : m_ReplicationRunnables)
+	{
+		delete ReplicationRunnable;
+	}
+	m_ReplicationRunnables.Empty();
 }
 
 void URemoteCharacterManager::UpdateData()
@@ -113,11 +123,17 @@ void URemoteCharacterManager::DestroyReplicant(Packet* _pInPack)
 //////////////////////////////////////////////////////////////////////////
 
 FReplicationRunnable::FReplicationRunnable()
+	: m_TaskQ(TCircularQueue<TFunction<void()>>(20))
 {
+	m_pThread = FRunnableThread::Create(this, TEXT("ReplicationThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
 
 FReplicationRunnable::~FReplicationRunnable()
 {
+	if (!m_pThread) return;
+
+	delete m_pThread;
+	m_pThread = nullptr;
 }
 
 bool FReplicationRunnable::Init()
