@@ -37,6 +37,4 @@ protected:
 
 private:
 	UHyperionClientSocket* m_pClientSock{ nullptr };
-
-	FCriticalSection m_CS;
 };

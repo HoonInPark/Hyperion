@@ -5,7 +5,7 @@
 #include "EngineMinimal.h"
 #include "HyperionBase/ObservableBase.h"
 #include "ServerHyperionLibrary/Packet.h"
-#include "ServerHyperionLibrary/ObjPool.h"
+#include "ServerHyperionLibrary/StlCircularQueue.h"
 #include "RemoteCharacterManager.generated.h"
 
 /**
@@ -28,8 +28,8 @@ public:
 	void Replicate(Packet* _pInPack); // CAUTION : called in io thread of cli sock class
 	void DestroyReplicant(Packet* _pInPack);
 
-	FORCEINLINE void SetCurPack(Packet* _InPack) { *m_pCurPack = *_InPack; }
-	FORCEINLINE Packet* GetCurPack() { return m_pCurPack; }
+	FORCEINLINE void SetCurPack(Packet* _InPack) { *m_pCurRecvPack = *_InPack; }
+	FORCEINLINE Packet* GetCurPack() { return m_pCurRecvPack; }
 
 public:
 	UPROPERTY(EditAnywhere, Category = "RemoteCharacter")
@@ -40,11 +40,10 @@ private:
 
 	TMap<int32, TScriptInterface<IObserverBase>> m_RemoteCharIdx;
 
-	Packet* m_pCurPack{ nullptr };
+	Packet* m_pCurRecvPack{ nullptr };
 	TQueue <TFunction<void()>> m_RecvTaskQ;
 
-	FCriticalSection m_CS;
-	ObjPool<Packet> m_PackPool;
+	StlCircularQueue<Packet>* m_pPackPool;
 };
 
 //////////////////////////////////////////////////////////////////////////

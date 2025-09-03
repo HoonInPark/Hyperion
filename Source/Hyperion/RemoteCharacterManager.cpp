@@ -17,10 +17,11 @@ URemoteCharacterManager::URemoteCharacterManager()
 
 void URemoteCharacterManager::ActivateReplication()
 {
-	m_pCurPack = new Packet;
-	//m_RecvTaskQ = TCircularQueue<TFunction<void()>>(12);
-	m_PackPool = ObjPool<Packet>(MAX_POOL_SIZE * 5);
-
+	m_pCurRecvPack = new Packet;
+	m_pPackPool = new StlCircularQueue<Packet>(MAX_POOL_SIZE * 5);
+	for (int i = 0; i < MAX_POOL_SIZE * 5; ++i)
+		m_pPackPool->enqueue(make_shared<Packet>());
+	
 	int32 NumLogicalCores = FPlatformMisc::NumberOfCoresIncludingHyperthreads();
 	for (int32 i = 0; i < NumLogicalCores - 3; i++)
 	{
@@ -30,10 +31,16 @@ void URemoteCharacterManager::ActivateReplication()
 
 void URemoteCharacterManager::DeactivateReplication()
 {
-	if (m_pCurPack)
+	if (m_pCurRecvPack)
 	{
-		delete m_pCurPack;
-		m_pCurPack = nullptr;
+		delete m_pCurRecvPack;
+		m_pCurRecvPack = nullptr;
+	}
+
+	if (m_pPackPool)
+	{
+		delete m_pPackPool;
+		m_pPackPool = nullptr;
 	}
 
 	for (auto ReplicationRunnable : m_ReplicationRunnables)
@@ -54,11 +61,8 @@ void URemoteCharacterManager::UpdateData()
 
 void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in io thread
 {
-	m_CS.Lock();
-	shared_ptr<Packet> pPack = m_PackPool.Acquire();
-	m_CS.Unlock();
-
-	if (!pPack)
+	shared_ptr<Packet> pPack;
+	if (!m_pPackPool->dequeue(pPack))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to Acquire while Replicating..."));
 		return;
@@ -94,11 +98,9 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 				m_RemoteCharIdx.Add(pPack->GetSessionIdx(), ObserverInterface);
 			}
 			
-			SetCurPack(pPack.get());
-
-			m_CS.Lock();
-			m_PackPool.Return(pPack);
-			m_CS.Unlock();
+			// TODO : TaskQ에서 하나씩 꺼내서 실행을 한다 해도, 람다식의 끝나는 속도가 제각각일 수 있음. 중요한 건 람다식의 실행 후 반환이 순서대로 이루어져야 한다는 거.
+			SetCurPack(pPack.get()); 
+			m_pPackPool->enqueue(pPack);
 
 			NotifyObservers();
 		});
