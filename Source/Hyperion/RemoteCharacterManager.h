@@ -28,7 +28,7 @@ public:
 	void Replicate(Packet* _pInPack); // CAUTION : called in io thread of cli sock class
 	void DestroyReplicant(Packet* _pInPack);
 
-	FORCEINLINE void SetCurPack(Packet* _InPack) { *m_pCurRecvPack = *_InPack; }
+	FORCEINLINE void SetCurPack(const Packet* _pInPack) { *m_pCurRecvPack = *_pInPack; }
 	FORCEINLINE Packet* GetCurPack() { return m_pCurRecvPack; }
 
 public:
@@ -41,9 +41,7 @@ private:
 	TMap<int32, TScriptInterface<IObserverBase>> m_RemoteCharIdx;
 
 	Packet* m_pCurRecvPack{ nullptr };
-	TQueue <TFunction<void()>> m_RecvTaskQ;
-
-	StlCircularQueue<Packet>* m_pPackPool;
+	TQueue<TFunction<void()>> m_RecvTaskQ;
 };
 
 //////////////////////////////////////////////////////////////////////////
