@@ -46,7 +46,7 @@ public:
 		delete[] buffer_;
 	}
 
-	bool enqueue(const shared_ptr<T>& data)
+	bool enqueue(unique_ptr<T>& data)
 	{
 		cell_t* cell;
 		size_t pos = enqueue_pos_.load(memory_order_relaxed);
@@ -74,13 +74,13 @@ public:
 				pos = enqueue_pos_.load(memory_order_relaxed);
 		}
 
-		cell->data_ = data;
+		cell->data_ = move(data);
 		cell->sequence_.store(pos + 1, memory_order_release);
 
 		return true;
 	}
 
-	bool dequeue(shared_ptr<T>& data)
+	bool dequeue(unique_ptr<T>& data)
 	{
 		cell_t* cell;
 		size_t pos = dequeue_pos_.load(memory_order_relaxed);
@@ -102,7 +102,7 @@ public:
 				pos = dequeue_pos_.load(memory_order_relaxed);
 		}
 
-		data = cell->data_;
+		data = move(cell->data_);
 		cell->data_ = nullptr;
 		cell->sequence_.store(pos + buffer_mask_ + 1, memory_order_release);
 
@@ -113,7 +113,7 @@ private:
 	struct cell_t
 	{
 		atomic<size_t>		sequence_;
-		shared_ptr<T>		data_;
+		unique_ptr<T>		data_;
 	};
 
 	//vector<cell_t>			buffer_;

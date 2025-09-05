@@ -40,7 +40,7 @@ public:
 	virtual int32 ActivateThreads(APawn* aPawn);
 	virtual int32 DeactivateThreads();
 
-	bool SendIO(const shared_ptr< stOverlappedEx > _pInSendOverlappedEx);
+	bool SendIO(const unique_ptr< OverlappedEx >& _pInSendOverlappedEx);
 	void SendCompleted(const UINT32 _InDataSize);
 	bool BindRecv();
 
@@ -48,7 +48,8 @@ public:
 	virtual void OnClose() {}
 	virtual void OnReceive(const UINT32 _InSize) {}
 
-	FORCEINLINE atomic<shared_ptr<stOverlappedEx>>& GetOverlappedEx() { return m_pOverlappedEx; }
+	FORCEINLINE unique_ptr<OverlappedEx>& GetInternOvlpdEx() { return m_pInternOvlpdEx; }
+	FORCEINLINE atomic<OverlappedEx*>& GetAtomicOvlpdEx() { return m_pAtomicOvlpdEx; }
 
 	FORCEINLINE StlCircularQueue<Packet>* GetSendPackPool() { return m_pSendPackPool; }
 	FORCEINLINE StlCircularQueue<Packet>* GetSendPackQ() { return m_pSendPackQ; }
@@ -70,23 +71,24 @@ protected:
 	}
 
 protected:
-	char m_RecvBuff[MAX_RECV_BUFF_SIZE];
+	char								m_RecvBuff[MAX_RECV_BUFF_SIZE];
 
 private:
 	atomic<bool>						m_bIsSessionIdxSet{ false };
 	atomic<UINT32>						m_SessionIdx{ 0 };	// Session Index
 
-	atomic<shared_ptr<stOverlappedEx>>	m_pOverlappedEx;
+	unique_ptr<OverlappedEx>			m_pInternOvlpdEx; // not to deleted when ref cnt go to zero
+	atomic<OverlappedEx*>				m_pAtomicOvlpdEx;
 
 	StlCircularQueue<Packet>*			m_pSendPackPool;
 	StlCircularQueue<Packet>*			m_pSendPackQ;
 
-	StlCircularQueue<stOverlappedEx>*	m_pSendDataPool;
-	StlCircularQueue<stOverlappedEx>*	m_pSendDataQ;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataPool;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataQ;
 
-	SOCKET m_Sock{ INVALID_SOCKET };
+	SOCKET								m_Sock{ INVALID_SOCKET };
 
-	stOverlappedEx*						m_pRecvOverlappedEx{ nullptr };	//RECV Overlapped I/O작업을 위한 변수	
+	OverlappedEx*						m_pRecvOverlappedEx{ nullptr };	//RECV Overlapped I/O작업을 위한 변수	
 	FClientRunnable_Send*				m_pClientRunnable_Send{ nullptr };
 };
 
@@ -97,8 +99,8 @@ class SERVERHYPERION_API FClientRunnable_Send : FRunnable
 public:
 	FClientRunnable_Send(
 		UClientSocket*						_pInClientSock,
-		StlCircularQueue<stOverlappedEx>*	_InSendDataQ,
-		StlCircularQueue<stOverlappedEx>*	_InSendDataPool);
+		StlCircularQueue<OverlappedEx>*	_InSendDataQ,
+		StlCircularQueue<OverlappedEx>*	_InSendDataPool);
 
 	virtual ~FClientRunnable_Send() override;
 
@@ -117,8 +119,8 @@ private:
 
 private:
 	UClientSocket*							m_pClientSock;
-	StlCircularQueue<stOverlappedEx>*		m_pSendDataQ;
-	StlCircularQueue<stOverlappedEx>*		m_pSendDataPool;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataQ;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataPool;
 
 	HANDLE m_IocpHandle{ INVALID_HANDLE_VALUE };
 
@@ -136,8 +138,8 @@ public:
 	FClientRunnable_IO(
 		UClientSocket*						_pInClientSock,
 		HANDLE								_InIocpHandle,
-		StlCircularQueue<stOverlappedEx>*	_InSendDataQ,
-		StlCircularQueue<stOverlappedEx>*	_InSendDataPool);
+		StlCircularQueue<OverlappedEx>*	_InSendDataQ,
+		StlCircularQueue<OverlappedEx>*	_InSendDataPool);
 
 	virtual ~FClientRunnable_IO() override;
 
@@ -153,8 +155,8 @@ private:
 private:
 	UClientSocket*							m_pClientSock;
 	HANDLE									m_IocpHandle;
-	StlCircularQueue<stOverlappedEx>*		m_pSendDataQ;
-	StlCircularQueue<stOverlappedEx>*		m_pSendDataPool;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataQ;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataPool;
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* m_pThread{ nullptr };

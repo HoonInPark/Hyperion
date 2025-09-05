@@ -60,7 +60,7 @@ void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObs
 
 	auto pObservable = CastChecked<UCharacterObservable>(_pInObservable);
 
-	shared_ptr<Packet> pPack;
+	unique_ptr<Packet> pPack;
 	if (!m_pClientSock->GetSendPackPool()->dequeue(pPack))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));

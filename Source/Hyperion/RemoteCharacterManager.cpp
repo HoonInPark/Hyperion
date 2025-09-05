@@ -20,7 +20,10 @@ void URemoteCharacterManager::ActivateReplication()
 	m_pCurRecvPack = new Packet;
 	m_pPackPool = new StlCircularQueue<Packet>(MAX_POOL_SIZE * 5);
 	for (int i = 0; i < MAX_POOL_SIZE * 5; ++i)
-		m_pPackPool->enqueue(make_shared<Packet>());
+	{
+		auto pPack = make_unique<Packet>();
+		m_pPackPool->enqueue(pPack);
+	}
 	
 	int32 NumLogicalCores = FPlatformMisc::NumberOfCoresIncludingHyperthreads();
 	for (int32 i = 0; i < NumLogicalCores - 3; i++)
@@ -61,7 +64,7 @@ void URemoteCharacterManager::UpdateData()
 
 void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in io thread
 {
-	shared_ptr<Packet> pPack;
+	unique_ptr<Packet> pPack;
 	if (!m_pPackPool->dequeue(pPack))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to Acquire while Replicating..."));
@@ -71,9 +74,9 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 	*pPack = *_pInPack;
 
 	m_RecvTaskQ.Enqueue(
-		[this, pPack]() mutable
+		[this, pPackMoved = move(pPack)]() mutable
 		{
-			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(pPack->GetSessionIdx());
+			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(pPackMoved->GetSessionIdx());
 			if (!pObserver)
 			{
 				UWorld* pWorld = GetWorld();
@@ -84,23 +87,23 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 					m_RemoteCharClass,
-					FVector(pPack->GetPosX(), pPack->GetPosY(), pPack->GetPosZ()),
+					FVector(pPackMoved->GetPosX(), pPackMoved->GetPosY(), pPackMoved->GetPosZ()),
 					FRotator(),
 					SpawnParam);
 
-				pRemoteCharacter->SetSessionIdx(pPack->GetSessionIdx());
+				pRemoteCharacter->SetSessionIdx(pPackMoved->GetSessionIdx());
 
 				TScriptInterface<IObserverBase> ObserverInterface;
 				ObserverInterface.SetObject(pRemoteCharacter);
 				ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
 				Subscribe(ObserverInterface);
 
-				m_RemoteCharIdx.Add(pPack->GetSessionIdx(), ObserverInterface);
+				m_RemoteCharIdx.Add(pPackMoved->GetSessionIdx(), ObserverInterface);
 			}
 			
 			// TODO : TaskQ에서 하나씩 꺼내서 실행을 한다 해도, 람다식의 끝나는 속도가 제각각일 수 있음. 중요한 건 람다식의 실행 후 반환이 순서대로 이루어져야 한다는 거.
-			SetCurPack(pPack.get()); 
-			m_pPackPool->enqueue(pPack);
+			SetCurPack(pPackMoved.get());
+			m_pPackPool->enqueue(pPackMoved);
 
 			NotifyObservers();
 		});
