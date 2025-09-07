@@ -23,6 +23,8 @@ int32 UClientSocket::ActivateThreads(APawn* aPawn)
 	m_pAtomicOvlpdEx.store(nullptr);
 	m_pInternOvlpdEx = nullptr;
 
+	// TODO : PLZ... fix this filthy init code by Wrap the StlCircularQueue with class name like StlCircularPool... 
+	// TODO : its usage is like StlCircularPool<T>(MAX_POOL_SIZE)...
 	m_pSendPackPool = new StlCircularQueue<Packet>(MAX_POOL_SIZE);
 	for (int i = 0; i < MAX_POOL_SIZE; ++i)
 	{
