@@ -56,22 +56,17 @@ void AHyperionPlayerController::OnUnPossess()
 
 void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObservable)
 {
-	if (!m_pClientSock->IsSessionIdxSet()) return;
-
 	auto pObservable = CastChecked<UCharacterObservable>(_pInObservable);
 
-	m_CS.Lock();
-	shared_ptr<Packet> pPack = m_pClientSock->GetSendPackPool().Acquire();
-	m_CS.Unlock();
-
-	if (!pPack)
+	unique_ptr<Packet> pPack;
+	if (!m_pClientSock->GetSendPackPool()->dequeue(pPack))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to Pop from Packet Object Pool"));
 		return;
 	}
 
 	pPack->SetMsgType(MsgType::MSG_GAME);
-	pPack->SetSessionIdx(m_pClientSock->GetSessionIdx());
+	pPack->SetSessionIdx(m_pClientSock->GetSessIdx());
 
 	pPack->SetIsJumping(pObservable->GetPlayerInAir());
 
@@ -103,7 +98,5 @@ void AHyperionPlayerController::OnNotify_Implementation(UObservableBase* _pInObs
 		*/
 	}
 
-	m_CS.Lock();
-	m_pClientSock->SendPackQ_Push(pPack);
-	m_CS.Unlock();
+	m_pClientSock->GetSendPackQ()->enqueue(pPack);
 }

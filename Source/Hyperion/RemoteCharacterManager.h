@@ -5,13 +5,14 @@
 #include "EngineMinimal.h"
 #include "HyperionBase/ObservableBase.h"
 #include "ServerHyperionLibrary/Packet.h"
-#include "ServerHyperionLibrary/ObjPool.h"
+#include "ServerHyperionLibrary/StlCircularQueue.h"
 #include "RemoteCharacterManager.generated.h"
 
 /**
  *
  */
 class ARemoteCharacter;
+class FReplicationRunnable;
 UCLASS()
 class HYPERION_API URemoteCharacterManager : public UObservableBase
 {
@@ -24,22 +25,45 @@ public:
 	void DeactivateReplication();
 	void UpdateData();
 
+	void Spawn(Packet* _pInPack);
 	void Replicate(Packet* _pInPack); // CAUTION : called in io thread of cli sock class
 	void DestroyReplicant(Packet* _pInPack);
 
-	FORCEINLINE void SetCurPack(Packet* _InPack) { *m_pCurPack = *_InPack; }
-	FORCEINLINE Packet* GetCurPack() { return m_pCurPack; }
+	FORCEINLINE void SetCurPack(const Packet* _pInPack) { *m_pCurRecvPack = *_pInPack; }
+	FORCEINLINE Packet* GetCurPack() { return m_pCurRecvPack; }
 
 public:
 	UPROPERTY(EditAnywhere, Category = "RemoteCharacter")
 	TSubclassOf<ARemoteCharacter> m_RemoteCharClass;
 
 private:
+	TArray<FReplicationRunnable*> m_ReplicationRunnables;
+
 	TMap<int32, TScriptInterface<IObserverBase>> m_RemoteCharIdx;
 
-	Packet* m_pCurPack{ nullptr };
-	TQueue <TFunction<void()>> m_RecvTaskQ;
+	Packet* m_pCurRecvPack{ nullptr };
+	TQueue<TFunction<void()>> m_RecvTaskQ;
+};
 
-	FCriticalSection m_CS;
-	ObjPool<Packet> m_PackPool;
+//////////////////////////////////////////////////////////////////////////
+
+class HYPERION_API FReplicationRunnable : FRunnable
+{
+public:
+	FReplicationRunnable();
+	virtual ~FReplicationRunnable() override;
+
+	virtual bool Init() override;
+	virtual uint32 Run() override;
+	virtual void Stop() override;
+	//virtual void Exit() override;
+
+	FORCEINLINE bool EnqueueTask(TFunction<void()> _InTask)
+	{ 
+		return m_TaskQ.Enqueue(_InTask); 
+	}
+
+private:
+	FRunnableThread* m_pThread{ nullptr };
+	TCircularQueue<TFunction<void()>> m_TaskQ;
 };

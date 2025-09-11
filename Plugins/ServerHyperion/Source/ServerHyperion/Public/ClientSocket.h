@@ -14,7 +14,7 @@
 
 #include <queue>
 #include "ServerHyperionLibrary/Packet.h"
-#include "ServerHyperionLibrary/ObjPool.h"
+#include "ServerHyperionLibrary/StlCircularQueue.h"
 #include "ServerHyperionLibrary/Define.h"
 
 #include "ClientSocket.generated.h"
@@ -35,41 +35,29 @@ class SERVERHYPERION_API UClientSocket : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UClientSocket();
-	~UClientSocket();
+	virtual ~UClientSocket() override;
 
 	virtual int32 ActivateThreads(APawn* aPawn);
 	virtual int32 DeactivateThreads();
 
-	inline void SendPackQ_Push(shared_ptr<Packet> _pInElem)
-	{
-		m_SendPackQ.push(_pInElem);
-	}
-
-	inline bool SendPackQ_Pop(shared_ptr<Packet>& _pOutElem)
-	{
-		if (m_SendPackQ.empty()) return false;
-		
-		_pOutElem = m_SendPackQ.front();
-		m_SendPackQ.pop();
-
-		return true;
-	}
-
-	bool SendIO();
+	bool SendIO(const unique_ptr< OverlappedEx >& _pInSendOverlappedEx);
+	void SendCompleted(const UINT32 _InDataSize);
 	bool BindRecv();
 
 	virtual void OnConnect() {}
 	virtual void OnClose() {}
 	virtual void OnReceive(const UINT32 _InSize) {}
 
-	FORCEINLINE ObjPool<Packet>& GetSendPackPool() { return m_SendPackPool; }
-	FORCEINLINE queue <shared_ptr< Packet >>& GetSendPackQ() { return m_SendPackQ; }
+	FORCEINLINE unique_ptr<OverlappedEx>& GetInternOvlpdEx() { return m_pInternOvlpdEx; }
+	FORCEINLINE atomic<OverlappedEx*>& GetAtomicOvlpdEx() { return m_pAtomicOvlpdEx; }
+
+	FORCEINLINE StlCircularQueue<Packet>* GetSendPackPool() { return m_pSendPackPool; }
+	FORCEINLINE StlCircularQueue<Packet>* GetSendPackQ() { return m_pSendPackQ; }
 
 	FORCEINLINE SOCKET& GetSock() { return m_Sock; }
 	FORCEINLINE char* GetRecvBuff() { return m_RecvBuff; }
 
-	FORCEINLINE const UINT32 GetSessionIdx() { return m_SessionIdx; }
-	FORCEINLINE bool IsSessionIdxSet() const { return m_bIsSessionIdxSet; }
+	FORCEINLINE const UINT32 GetSessIdx() { return m_SessionIdx; }
 
 protected:
 	FORCEINLINE bool SetSessionIdx(const UINT32 _InSessionIdx) 
@@ -82,22 +70,25 @@ protected:
 	}
 
 protected:
-	char m_RecvBuff[MAX_RECV_BUFF_SIZE];
+	char								m_RecvBuff[MAX_RECV_BUFF_SIZE];
 
 private:
-	atomic<bool> m_bIsSessionIdxSet{ false };
-	atomic<UINT32> m_SessionIdx{ 0 };	// Session Index
+	atomic<bool>						m_bIsSessionIdxSet{ false };
+	atomic<UINT32>						m_SessionIdx{ 0 };	// Session Index
 
-	queue <shared_ptr< stOverlappedEx >>	m_SendDataQ;
-	ObjPool<stOverlappedEx>					m_SendDataPool;
+	unique_ptr<OverlappedEx>			m_pInternOvlpdEx; // not to deleted when ref cnt go to zero
+	atomic<OverlappedEx*>				m_pAtomicOvlpdEx;
 
-	ObjPool<Packet> m_SendPackPool;
-	queue <shared_ptr< Packet >> m_SendPackQ;
+	StlCircularQueue<Packet>*			m_pSendPackPool;
+	StlCircularQueue<Packet>*			m_pSendPackQ;
 
-	SOCKET m_Sock{ INVALID_SOCKET };
+	StlCircularQueue<OverlappedEx>*		m_pSendDataPool;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataQ;
 
-	stOverlappedEx*	m_pRecvOverlappedEx{ nullptr };	//RECV Overlapped I/O작업을 위한 변수	
-	FClientRunnable_Send* m_pClientRunnable_Send{ nullptr };
+	SOCKET								m_Sock{ INVALID_SOCKET };
+
+	OverlappedEx*						m_pRecvOverlappedEx{ nullptr };	//RECV Overlapped I/O작업을 위한 변수	
+	FClientRunnable_Send*				m_pClientRunnable_Send{ nullptr };
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -106,10 +97,11 @@ class SERVERHYPERION_API FClientRunnable_Send : FRunnable
 {
 public:
 	FClientRunnable_Send(
-		UClientSocket*							_pInClientSock,
-		queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ,
-		ObjPool<stOverlappedEx>&				_InSendDataPool);
-	~FClientRunnable_Send();
+		UClientSocket*						_pInClientSock,
+		StlCircularQueue<OverlappedEx>*	_InSendDataQ,
+		StlCircularQueue<OverlappedEx>*	_InSendDataPool);
+
+	virtual ~FClientRunnable_Send() override;
 
 	virtual bool Init() override;
 	virtual uint32 Run() override;
@@ -126,12 +118,10 @@ private:
 
 private:
 	UClientSocket*							m_pClientSock;
-	queue <shared_ptr< stOverlappedEx >>&	m_SendDataQ;
-	ObjPool<stOverlappedEx>&				m_SendDataPool;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataQ;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataPool;
 
 	HANDLE m_IocpHandle{ INVALID_HANDLE_VALUE };
-
-	FCriticalSection m_CS;
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* m_pThread{ nullptr };
@@ -145,11 +135,12 @@ class SERVERHYPERION_API FClientRunnable_IO : FRunnable
 {
 public:
 	FClientRunnable_IO(
-		UClientSocket*							_pInClientSock,
-		HANDLE									_InIocpHandle,
-		queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ, 
-		ObjPool<stOverlappedEx>&				_InSendDataPool);
-	~FClientRunnable_IO();
+		UClientSocket*						_pInClientSock,
+		HANDLE								_InIocpHandle,
+		StlCircularQueue<OverlappedEx>*	_InSendDataQ,
+		StlCircularQueue<OverlappedEx>*	_InSendDataPool);
+
+	virtual ~FClientRunnable_IO() override;
 
 	virtual bool Init() override;
 	virtual uint32 Run() override;
@@ -159,15 +150,12 @@ public:
 
 private:
 	void CloseSock(bool _bIsForce = false);
-	void SendCompleted(const UINT32 _InDataSize);
 
 private:
 	UClientSocket*							m_pClientSock;
 	HANDLE									m_IocpHandle;
-	queue <shared_ptr< stOverlappedEx >>&	m_SendDataQ;
-	ObjPool<stOverlappedEx>&				m_SendDataPool;
-
-	FCriticalSection m_CS;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataQ;
+	StlCircularQueue<OverlappedEx>*		m_pSendDataPool;
 
 	bool m_bIsRunning{ true };
 	FRunnableThread* m_pThread{ nullptr };

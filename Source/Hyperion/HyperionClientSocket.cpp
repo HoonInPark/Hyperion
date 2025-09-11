@@ -49,24 +49,36 @@ void UHyperionClientSocket::OnReceive(const UINT32 _InSize)
 	{
 	case MsgType::MSG_INIT:
 	{
-		if (!IsSessionIdxSet())
+		SetSessionIdx(m_pPack->GetSessIdx());
+		break;
+	}
+	case MsgType::MSG_SPAWN:
+	{
+		if (m_pPack->GetSessIdx() == GetSessIdx())
 		{
-			SetSessionIdx(m_pPack->GetSessionIdx());
+			break;
+		}
+
+		// TODO : 이미 사람들이 접속해 있는 방에 새로 들어올 때, 현재는 replicate되고 있는지 여부를 확인해서 없으면 새로 스폰하는 식으로 메시지를 처리하지만, 
+		// TODO : 앞으로는 새로 접속한 사용자는 기존의 방에 누가 있는지 메시지로 쏴서 스폰하도록 명령을 줘야 한다. 
+		auto pOwner = GetOwner();
+		if (auto pController = Cast<AHyperionPlayerController>(pOwner))
+		{
+			pController->GetRemoteCharMng()->Spawn(m_pPack);
 		}
 		else
 		{
-			// send initial pos to be spawned in other cli's world
-			auto pHyperionPlayerController = Cast<AHyperionPlayerController>(GetOwner());
-			auto pPawn = pHyperionPlayerController->GetPawn();
-			auto pHyperionChar = Cast<AHyperionCharacter>(pPawn);
-
-			pHyperionChar->UpdateInitialCharData();
+			UE_LOG(LogTemp, Error, TEXT("Failed to cast Owner to AHyperionPlayerController"));
 		}
-
 		break;
 	}
 	case MsgType::MSG_GAME:
 	{
+		if (m_pPack->GetSessIdx() == GetSessIdx())
+		{
+			break;
+		}
+
 		auto pOwner = GetOwner();
 		if (auto pController = Cast<AHyperionPlayerController>(pOwner))
 		{

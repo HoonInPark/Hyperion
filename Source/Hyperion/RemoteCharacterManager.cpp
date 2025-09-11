@@ -17,18 +17,24 @@ URemoteCharacterManager::URemoteCharacterManager()
 
 void URemoteCharacterManager::ActivateReplication()
 {
-	m_pCurPack = new Packet;
-	//m_RecvTaskQ = TCircularQueue<TFunction<void()>>(12);
-	m_PackPool = ObjPool<Packet>(MAX_POOL_SIZE * 5);
+	m_pCurRecvPack = new Packet();
+
+	int32 NumLogicalCores = FPlatformMisc::NumberOfCoresIncludingHyperthreads();
+	for (int32 i = 0; i < NumLogicalCores - 3; i++)
+	{
+		m_ReplicationRunnables.Add(new FReplicationRunnable);
+	}
 }
 
 void URemoteCharacterManager::DeactivateReplication()
 {
-	if (m_pCurPack)
+	delete m_pCurRecvPack;
+
+	for (auto ReplicationRunnable : m_ReplicationRunnables)
 	{
-		delete m_pCurPack;
-		m_pCurPack = nullptr;
+		delete ReplicationRunnable;
 	}
+	m_ReplicationRunnables.Empty();
 }
 
 void URemoteCharacterManager::UpdateData()
@@ -40,24 +46,51 @@ void URemoteCharacterManager::UpdateData()
 	}
 }
 
+void URemoteCharacterManager::Spawn(Packet* _pInPack)
+{
+	m_RecvTaskQ.Enqueue(
+		[this, Pack = *_pInPack]() mutable
+		{
+			// TODO : 이미 사람들이 접속해 있는 방에 새로 들어올 때, 현재는 replicate되고 있는지 여부를 확인해서 없으면 새로 스폰하는 식으로 메시지를 처리하지만, 
+			// TODO : 앞으로는 새로 접속한 사용자는 기존의 방에 누가 있는지 메시지로 쏴서 스폰하도록 명령을 줘야 한다. 
+			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(Pack.GetSessIdx());
+			if (!pObserver)
+			{
+				UWorld* pWorld = GetWorld();
+
+				FActorSpawnParameters SpawnParam;
+				SpawnParam.SpawnCollisionHandlingOverride =
+					ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
+					m_RemoteCharClass,
+					FVector(Pack.GetPosX(), Pack.GetPosY(), Pack.GetPosZ()),
+					FRotator(),
+					SpawnParam);
+
+				pRemoteCharacter->SetSessionIdx(Pack.GetSessIdx());
+
+				TScriptInterface<IObserverBase> ObserverInterface;
+				ObserverInterface.SetObject(pRemoteCharacter);
+				ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
+				Subscribe(ObserverInterface);
+
+				m_RemoteCharIdx.Add(Pack.GetSessIdx(), ObserverInterface);
+			}
+
+			SetCurPack(&Pack);
+			NotifyObservers();
+		});
+}
+
 void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in io thread
 {
-	m_CS.Lock();
-	shared_ptr<Packet> pPack = m_PackPool.Acquire();
-	m_CS.Unlock();
-
-	if (!pPack)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to Acquire while Replicating..."));
-		return;
-	}
-
-	*pPack = *_pInPack;
-
 	m_RecvTaskQ.Enqueue(
-		[this, pPack]() mutable
+		[this, Pack = *_pInPack]() mutable
 		{
-			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(pPack->GetSessionIdx());
+			// TODO : 이미 사람들이 접속해 있는 방에 새로 들어올 때, 현재는 replicate되고 있는지 여부를 확인해서 없으면 새로 스폰하는 식으로 메시지를 처리하지만, 
+			// TODO : 앞으로는 새로 접속한 사용자는 기존의 방에 누가 있는지 메시지로 쏴서 스폰하도록 명령을 줘야 한다. 
+			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(Pack.GetSessIdx());
 			if (!pObserver)
 			{
 				UWorld* pWorld = GetWorld();
@@ -68,26 +101,21 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 
 				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
 					m_RemoteCharClass,
-					FVector(pPack->GetPosX(), pPack->GetPosY(), pPack->GetPosZ()),
+					FVector(Pack.GetPosX(), Pack.GetPosY(), Pack.GetPosZ()),
 					FRotator(),
 					SpawnParam);
 
-				pRemoteCharacter->SetSessionIdx(pPack->GetSessionIdx());
+				pRemoteCharacter->SetSessionIdx(Pack.GetSessIdx());
 
 				TScriptInterface<IObserverBase> ObserverInterface;
 				ObserverInterface.SetObject(pRemoteCharacter);
 				ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
 				Subscribe(ObserverInterface);
 
-				m_RemoteCharIdx.Add(pPack->GetSessionIdx(), ObserverInterface);
+				m_RemoteCharIdx.Add(Pack.GetSessIdx(), ObserverInterface);
 			}
 			
-			SetCurPack(pPack.get());
-
-			m_CS.Lock();
-			m_PackPool.Return(pPack);
-			m_CS.Unlock();
-
+			SetCurPack(&Pack);
 			NotifyObservers();
 		});
 }
@@ -95,7 +123,7 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 void URemoteCharacterManager::DestroyReplicant(Packet* _pInPack)
 {
 	m_RecvTaskQ.Enqueue(
-		[this, SessionIdx = _pInPack->GetSessionIdx()]() mutable
+		[this, SessionIdx = _pInPack->GetSessIdx()]() mutable
 		{
 			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(SessionIdx);
 			check(pObserver);
@@ -106,4 +134,34 @@ void URemoteCharacterManager::DestroyReplicant(Packet* _pInPack)
 			auto pRemoteChar = Cast<ARemoteCharacter>(pObserver->GetObject());
 			pRemoteChar->Destroy();
 		});
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+FReplicationRunnable::FReplicationRunnable()
+	: m_TaskQ(TCircularQueue<TFunction<void()>>(20))
+{
+	m_pThread = FRunnableThread::Create(this, TEXT("ReplicationThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
+}
+
+FReplicationRunnable::~FReplicationRunnable()
+{
+	if (!m_pThread) return;
+
+	delete m_pThread;
+	m_pThread = nullptr;
+}
+
+bool FReplicationRunnable::Init()
+{
+	return false;
+}
+
+uint32 FReplicationRunnable::Run()
+{
+	return uint32();
+}
+
+void FReplicationRunnable::Stop()
+{
 }

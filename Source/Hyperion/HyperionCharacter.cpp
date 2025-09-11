@@ -120,19 +120,6 @@ void AHyperionCharacter::PossessedBy(AController* NewController)
 	m_pObservable->Subscribe(ObserverInterface);
 }
 
-void AHyperionCharacter::UpdateInitialCharData()
-{
-	m_CharStates.Init(true, m_CharStates.Num());
-	
-	m_pObservable->UpdateData(
-		m_CharStates,
-		GetActorLocation(),
-		GetControlRotation(), // if GetActorRotation() is called, not GetControlRotation(), it only returns yaw changes
-		GetCharacterMovement()->IsFalling());
-
-	m_CharStates.Init(false, m_CharStates.Num());
-}
-
 void AHyperionCharacter::TimerTick()
 {
 	m_pObservable->UpdateData(

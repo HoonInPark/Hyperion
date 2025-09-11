@@ -20,12 +20,30 @@ UClientSocket::~UClientSocket()
 
 int32 UClientSocket::ActivateThreads(APawn* aPawn)
 {
-	m_SendPackPool = ObjPool<Packet>(MAX_POOL_SIZE);
-	m_SendDataPool = ObjPool<stOverlappedEx>(MAX_POOL_SIZE);
+	m_pAtomicOvlpdEx.store(nullptr);
+	m_pInternOvlpdEx = nullptr;
 
-	m_pRecvOverlappedEx = new stOverlappedEx;
+	// TODO : PLZ... fix this filthy init code by Wrap the StlCircularQueue with class name like StlCircularPool... 
+	// TODO : its usage is like StlCircularPool<T>(MAX_POOL_SIZE)...
+	m_pSendPackPool = new StlCircularQueue<Packet>(MAX_POOL_SIZE);
+	for (int i = 0; i < MAX_POOL_SIZE; ++i)
+	{
+		auto pPack = make_unique<Packet>();
+		m_pSendPackPool->enqueue(pPack);
+	}
+	m_pSendPackQ = new StlCircularQueue<Packet>(MAX_POOL_SIZE);
 
-	m_pClientRunnable_Send = new FClientRunnable_Send(this, m_SendDataQ, m_SendDataPool);
+	m_pSendDataPool = new StlCircularQueue<OverlappedEx>(MAX_POOL_SIZE);
+	for (int i = 0; i < MAX_POOL_SIZE; ++i)
+	{
+		auto pOvlpdEx = make_unique<OverlappedEx>();
+		m_pSendDataPool->enqueue(pOvlpdEx);
+	}
+	m_pSendDataQ = new StlCircularQueue<OverlappedEx>(MAX_POOL_SIZE);
+
+	m_pRecvOverlappedEx = new OverlappedEx;
+
+	m_pClientRunnable_Send = new FClientRunnable_Send(this, m_pSendDataQ, m_pSendDataPool);
 
 	return 0;
 }
@@ -43,18 +61,16 @@ int32 UClientSocket::DeactivateThreads()
 	return 0;
 }
 
-bool UClientSocket::SendIO()
+bool UClientSocket::SendIO(const unique_ptr< OverlappedEx >& _pInSendOverlappedEx)
 {
-	shared_ptr< stOverlappedEx > sendOverlappedEx = m_SendDataQ.front();
-
 	DWORD dwRecvNumBytes = 0;
 	int nRet = WSASend(
 		m_Sock,
-		&(sendOverlappedEx->m_wsaBuf),
+		&(_pInSendOverlappedEx->m_wsaBuf),
 		1,
 		&dwRecvNumBytes,
 		0,
-		(LPWSAOVERLAPPED)sendOverlappedEx.get(),
+		(LPWSAOVERLAPPED)_pInSendOverlappedEx.get(),
 		NULL);
 
 	if (nRet == SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
@@ -64,6 +80,24 @@ bool UClientSocket::SendIO()
 	}
 
 	return true;
+}
+
+void UClientSocket::SendCompleted(const UINT32 _InDataSize)
+{
+	//UE_LOG(LogTemp, Warning, TEXT("Send Complete Data Size : %d"), _InDataSize);
+
+	m_pSendDataPool->enqueue(m_pInternOvlpdEx);
+
+	if (m_pSendDataQ->dequeue(m_pInternOvlpdEx))
+	{
+		m_pAtomicOvlpdEx.exchange(m_pInternOvlpdEx.get(), memory_order_acq_rel);
+		SendIO(m_pInternOvlpdEx);
+	}
+	else
+	{
+		m_pInternOvlpdEx = nullptr;
+		m_pAtomicOvlpdEx.exchange(nullptr, memory_order_release);
+	}
 }
 
 bool UClientSocket::BindRecv()
@@ -98,12 +132,12 @@ bool UClientSocket::BindRecv()
 //////////////////////////////////////////////////////////////////////////
 
 FClientRunnable_Send::FClientRunnable_Send(
-	UClientSocket*							_pInClientSock,
-	queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ,
-	ObjPool<stOverlappedEx>&				_InSendDataPool)
-	: m_pClientSock	(_pInClientSock)
-	, m_SendDataQ	(_InSendDataQ)
-	, m_SendDataPool(_InSendDataPool)
+	UClientSocket*						_pInClientSock,
+	StlCircularQueue<OverlappedEx>*	_InSendDataQ,
+	StlCircularQueue<OverlappedEx>*	_InSendDataPool)
+	: m_pClientSock		(_pInClientSock)
+	, m_pSendDataQ		(_InSendDataQ)
+	, m_pSendDataPool	(_InSendDataPool)
 {
 	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_Send"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
@@ -146,38 +180,32 @@ bool FClientRunnable_Send::Init() // func Init also called in outside of thread.
 	if (!BindIOCompletionPort(m_IocpHandle))
 		return false;
 
-	m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_IocpHandle, m_SendDataQ, m_SendDataPool);
+	m_pClientRunnable_IO = new FClientRunnable_IO(m_pClientSock, m_IocpHandle, m_pSendDataQ, m_pSendDataPool);
 
 	return true;
 }
 
 uint32 FClientRunnable_Send::Run()
 {
-	shared_ptr<Packet> pPack = nullptr;
+	unique_ptr<Packet> pPack = nullptr;
 	char* pStart = nullptr;
 	UINT8 Size;
 
 	while (m_bIsRunning)
 	{
 		FPlatformProcess::Sleep(0.003f);
-		m_CS.Lock();
 
-		queue <shared_ptr< Packet >>& SendPackQ = m_pClientSock->GetSendPackQ();
-
-		if (!SendPackQ.empty())
+		if (m_pClientSock->GetSendPackQ()->dequeue(pPack))
 		{
-			pPack = SendPackQ.front();
 			Size = pPack->Write(pStart);
-			SendPackQ.pop();
-			m_pClientSock->GetSendPackPool().Return(pPack);
-			m_CS.Unlock();
+			m_pClientSock->GetSendPackPool()->enqueue(pPack);
 
 			SendMsg(Size, pStart);
+			pPack = nullptr;
 		}
-		else 
-			m_CS.Unlock();
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("FClientRunnable_Send::Run() Is Returned Safely"));
 	return 0;
 }
 
@@ -259,40 +287,38 @@ bool FClientRunnable_Send::BindIOCompletionPort(HANDLE _InIocpHandle)
 
 bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 {
-	m_CS.Lock();
-
-	shared_ptr<stOverlappedEx> pSendOverlappedEx = m_SendDataPool.Acquire();
-	if (!pSendOverlappedEx)
+	unique_ptr<OverlappedEx> pSendOvlpdEx;
+	if (!m_pSendDataPool->dequeue(pSendOvlpdEx))
 	{
-		m_CS.Unlock();
 		UE_LOG(LogTemp, Error, TEXT("Failed to run Acquire() From Send Data Pool"));
-
 		return false;
 	}
 
-	m_CS.Unlock();
+	////////////////////////////////////////////////////////////////////////////////
+	/// write byte
+	////////////////////////////////////////////////////////////////////////////////
+	pSendOvlpdEx->Init();
+	pSendOvlpdEx->m_wsaBuf.len = _InSize;
+	CopyMemory(pSendOvlpdEx->m_wsaBuf.buf, _pInMsg, _InSize);
+	pSendOvlpdEx->m_eOperation = IOOperation::IO_SEND;
+	////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////
 
-	//ZeroMemory(pSendOverlappedEx.get(), sizeof(stOverlappedEx));
-	//pSendOverlappedEx->m_wsaBuf.len = _InSize;
-	//pSendOverlappedEx->m_wsaBuf.buf = new char[_InSize];
-	//CopyMemory(pSendOverlappedEx->m_wsaBuf.buf, _pInMsg, _InSize);
-	//pSendOverlappedEx->m_eOperation = IOOperation::SEND;
-
-	pSendOverlappedEx->Init();
-	pSendOverlappedEx->m_wsaBuf.len = _InSize;
-	CopyMemory(pSendOverlappedEx->m_wsaBuf.buf, _pInMsg, _InSize);
-	pSendOverlappedEx->m_eOperation = IOOperation::IO_SEND;
-
-	m_CS.Lock();
-
-	m_SendDataQ.push(pSendOverlappedEx);
-
-	if (m_SendDataQ.size() == 1)
+	m_pSendDataQ->enqueue(pSendOvlpdEx);
+	// If there are no messages currently in the process of being sent
+	if (nullptr == m_pClientSock->GetAtomicOvlpdEx().load(memory_order_relaxed))
 	{
-		m_pClientSock->SendIO();
+		if (m_pSendDataQ->dequeue(m_pClientSock->GetInternOvlpdEx()))
+		{
+			m_pClientSock->GetAtomicOvlpdEx().store(m_pClientSock->GetInternOvlpdEx().get(), memory_order_release);
+			m_pClientSock->SendIO(m_pClientSock->GetInternOvlpdEx());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[SendMsg] : Error while dequeue from send buf q, data race is suspected"));
+			return false;
+		}
 	}
-
-	m_CS.Unlock();
 
 	return true;
 }
@@ -302,12 +328,12 @@ bool FClientRunnable_Send::SendMsg(const UINT32 _InSize, char* _pInMsg)
 FClientRunnable_IO::FClientRunnable_IO(
 	UClientSocket*							_pInClientSock,
 	HANDLE									_InIocpHandle,
-	queue <shared_ptr< stOverlappedEx >>&	_InSendDataQ,
-	ObjPool<stOverlappedEx>&				_InSendDataPool)
-	: m_pClientSock	(_pInClientSock)
-	, m_IocpHandle	(_InIocpHandle)
-	, m_SendDataQ	(_InSendDataQ)
-	, m_SendDataPool(_InSendDataPool)
+	StlCircularQueue<OverlappedEx>*		_pInSendDataQ,
+	StlCircularQueue<OverlappedEx>*		_pInSendDataPool)
+	: m_pClientSock		(_pInClientSock)
+	, m_IocpHandle		(_InIocpHandle)
+	, m_pSendDataQ		(_pInSendDataQ)
+	, m_pSendDataPool	(_pInSendDataPool)
 {
 	m_pThread = FRunnableThread::Create(this, TEXT("ClientThread_IO"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify more
 }
@@ -356,7 +382,7 @@ uint32 FClientRunnable_IO::Run()
 			continue;
 		}
 
-		auto pOverlappedEx = (stOverlappedEx*)lpOverlapped;
+		auto pOverlappedEx = (OverlappedEx*)lpOverlapped;
 
 		if (FALSE == bSuccess || (0 == dwIoSize && IOOperation::IO_ACCEPT != pOverlappedEx->m_eOperation))
 		{
@@ -375,7 +401,7 @@ uint32 FClientRunnable_IO::Run()
 		}
 		case IOOperation::IO_SEND:
 		{
-			SendCompleted(dwIoSize);
+			m_pClientSock->SendCompleted(dwIoSize);
 
 			break;
 		}
@@ -384,6 +410,7 @@ uint32 FClientRunnable_IO::Run()
 		}
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("FClientRunnable_IO::Run() Is Returned Safely"));
 	return 0;
 }
 
@@ -414,21 +441,4 @@ void FClientRunnable_IO::CloseSock(bool _bIsForce)
 	m_pClientSock->GetSock() = INVALID_SOCKET;
 
 	m_pClientSock->OnClose();
-}
-
-void FClientRunnable_IO::SendCompleted(const UINT32 _InDataSize)
-{
-	//UE_LOG(LogTemp, Warning, TEXT("Send Complete Data Size : %d"), _InDataSize);
-
-	m_CS.Lock();
-
-	m_SendDataPool.Return(m_SendDataQ.front());
-	m_SendDataQ.pop();
-
-	if (m_SendDataQ.empty() == false)
-	{
-		m_pClientSock->SendIO();
-	}
-
-	m_CS.Unlock();
 }
