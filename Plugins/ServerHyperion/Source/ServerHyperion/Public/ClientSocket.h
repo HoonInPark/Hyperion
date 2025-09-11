@@ -57,8 +57,7 @@ public:
 	FORCEINLINE SOCKET& GetSock() { return m_Sock; }
 	FORCEINLINE char* GetRecvBuff() { return m_RecvBuff; }
 
-	FORCEINLINE const UINT32 GetSessionIdx() { return m_SessionIdx; }
-	FORCEINLINE bool IsSessionIdxSet() const { return m_bIsSessionIdxSet; }
+	FORCEINLINE const UINT32 GetSessIdx() { return m_SessionIdx; }
 
 protected:
 	FORCEINLINE bool SetSessionIdx(const UINT32 _InSessionIdx) 

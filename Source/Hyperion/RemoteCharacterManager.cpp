@@ -46,12 +46,51 @@ void URemoteCharacterManager::UpdateData()
 	}
 }
 
+void URemoteCharacterManager::Spawn(Packet* _pInPack)
+{
+	m_RecvTaskQ.Enqueue(
+		[this, Pack = *_pInPack]() mutable
+		{
+			// TODO : 이미 사람들이 접속해 있는 방에 새로 들어올 때, 현재는 replicate되고 있는지 여부를 확인해서 없으면 새로 스폰하는 식으로 메시지를 처리하지만, 
+			// TODO : 앞으로는 새로 접속한 사용자는 기존의 방에 누가 있는지 메시지로 쏴서 스폰하도록 명령을 줘야 한다. 
+			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(Pack.GetSessIdx());
+			if (!pObserver)
+			{
+				UWorld* pWorld = GetWorld();
+
+				FActorSpawnParameters SpawnParam;
+				SpawnParam.SpawnCollisionHandlingOverride =
+					ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+				auto pRemoteCharacter = pWorld->SpawnActor<ARemoteCharacter>(
+					m_RemoteCharClass,
+					FVector(Pack.GetPosX(), Pack.GetPosY(), Pack.GetPosZ()),
+					FRotator(),
+					SpawnParam);
+
+				pRemoteCharacter->SetSessionIdx(Pack.GetSessIdx());
+
+				TScriptInterface<IObserverBase> ObserverInterface;
+				ObserverInterface.SetObject(pRemoteCharacter);
+				ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
+				Subscribe(ObserverInterface);
+
+				m_RemoteCharIdx.Add(Pack.GetSessIdx(), ObserverInterface);
+			}
+
+			SetCurPack(&Pack);
+			NotifyObservers();
+		});
+}
+
 void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in io thread
 {
 	m_RecvTaskQ.Enqueue(
 		[this, Pack = *_pInPack]() mutable
 		{
-			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(Pack.GetSessionIdx());
+			// TODO : 이미 사람들이 접속해 있는 방에 새로 들어올 때, 현재는 replicate되고 있는지 여부를 확인해서 없으면 새로 스폰하는 식으로 메시지를 처리하지만, 
+			// TODO : 앞으로는 새로 접속한 사용자는 기존의 방에 누가 있는지 메시지로 쏴서 스폰하도록 명령을 줘야 한다. 
+			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(Pack.GetSessIdx());
 			if (!pObserver)
 			{
 				UWorld* pWorld = GetWorld();
@@ -66,14 +105,14 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 					FRotator(),
 					SpawnParam);
 
-				pRemoteCharacter->SetSessionIdx(Pack.GetSessionIdx());
+				pRemoteCharacter->SetSessionIdx(Pack.GetSessIdx());
 
 				TScriptInterface<IObserverBase> ObserverInterface;
 				ObserverInterface.SetObject(pRemoteCharacter);
 				ObserverInterface.SetInterface(Cast<IObserverBase>(pRemoteCharacter));
 				Subscribe(ObserverInterface);
 
-				m_RemoteCharIdx.Add(Pack.GetSessionIdx(), ObserverInterface);
+				m_RemoteCharIdx.Add(Pack.GetSessIdx(), ObserverInterface);
 			}
 			
 			SetCurPack(&Pack);
@@ -84,7 +123,7 @@ void URemoteCharacterManager::Replicate(Packet* _pInPack) // CAUTION : called in
 void URemoteCharacterManager::DestroyReplicant(Packet* _pInPack)
 {
 	m_RecvTaskQ.Enqueue(
-		[this, SessionIdx = _pInPack->GetSessionIdx()]() mutable
+		[this, SessionIdx = _pInPack->GetSessIdx()]() mutable
 		{
 			TScriptInterface<IObserverBase>* pObserver = m_RemoteCharIdx.Find(SessionIdx);
 			check(pObserver);

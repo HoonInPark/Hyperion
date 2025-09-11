@@ -25,6 +25,7 @@ public:
 	void DeactivateReplication();
 	void UpdateData();
 
+	void Spawn(Packet* _pInPack);
 	void Replicate(Packet* _pInPack); // CAUTION : called in io thread of cli sock class
 	void DestroyReplicant(Packet* _pInPack);
 

@@ -51,7 +51,7 @@ void ARemoteCharacter::OnNotify_Implementation(UObservableBase* _pInObservable)
 	auto pRemoteCharMng = Cast<URemoteCharacterManager>(_pInObservable);
 	//check(pRemoteCharMng);
 
-	if (pRemoteCharMng->GetCurPack()->GetSessionIdx() == m_SessionIdx)
+	if (pRemoteCharMng->GetCurPack()->GetSessIdx() == m_SessionIdx)
 	{
 		if (pRemoteCharMng->GetCurPack()->GetHeader()[static_cast<int>(Packet::Header::POS_X)])
 		{

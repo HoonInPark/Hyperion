@@ -67,6 +67,7 @@ inline bool PacketSampler::ReadFile()
 	ifstream ifs(m_MetaFilePath, ios::binary);
 	size_t count;
 	ifs.read(reinterpret_cast<char*>(&count), sizeof(count));
+	m_Meta.resize(count);
 	ifs.read(reinterpret_cast<char*>(m_Meta.data()), count * sizeof(size_t));
 	////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////
